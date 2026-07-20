@@ -1,0 +1,56 @@
+# Huion Keydial Mini Configuration
+# This is the default configuration file. Edit this file to customize your key bindings.
+
+# Device settings
+device_address: null  # Will auto-discover if not set
+
+# Key mappings (will be loaded into memory)
+# Format: button_name: "KEY_NAME" or "KEY_MODIFIER+KEY_NAME"
+# Available buttons: BUTTON_1-BUTTON_18, dial actions: DIAL_CW, DIAL_CCW, DIAL_CLICK
+#
+# Individual buttons:
+#   BUTTON_1: "KEY_F1"                    # Single key
+#   BUTTON_2: "KEY_LEFTCTRL+KEY_C"        # Key combination
+#   BUTTON_3: "KEY_VOLUMEUP"              # Media key
+#
+# Button combinations (NEW!):
+#   BUTTON_1+BUTTON_2: "KEY_LEFTCTRL+KEY_C"      # Two-button combo
+#   BUTTON_1+BUTTON_3: "KEY_LEFTCTRL+KEY_V"      # Another combo
+#   BUTTON_1+BUTTON_2+BUTTON_3: "KEY_LEFTCTRL+KEY_SHIFT+KEY_Z"  # Three-button combo
+#
+# Note: Button order in combos doesn't matter (BUTTON_1+BUTTON_2 = BUTTON_2+BUTTON_1)
+key_mappings:
+  # Individual buttons
+  # BUTTON_1: "KEY_F1"
+  # BUTTON_2: "KEY_LEFTCTRL+KEY_C"
+  # BUTTON_3: "KEY_VOLUMEUP"
+  # BUTTON_4: "KEY_VOLUMEDOWN"
+  # BUTTON_5: "KEY_MUTE"
+  # BUTTON_6: "KEY_PLAYPAUSE"
+  # BUTTON_7: "KEY_ENTER"
+  # BUTTON_8: "KEY_ESC"
+
+  # Button combinations (examples)
+  # BUTTON_1+BUTTON_2: "KEY_LEFTCTRL+KEY_C"          # Copy
+  # BUTTON_1+BUTTON_3: "KEY_LEFTCTRL+KEY_V"          # Paste
+  # BUTTON_2+BUTTON_3: "KEY_LEFTCTRL+KEY_Z"          # Undo
+  # BUTTON_1+BUTTON_2+BUTTON_3: "KEY_LEFTCTRL+KEY_SHIFT+KEY_Z"  # Redo
+
+sticky_key_mappings:
+  # BUTTON_1: "KEY_LEFTCTRL"
+
+# Dial settings
+dial_settings:
+  DIAL_CW: "KEY_VOLUMEUP"      # Send volume up when dial is turned clockwise
+  DIAL_CCW: "KEY_VOLUMEDOWN"   # Send volume down when dial is turned counterclockwise
+  DIAL_CLICK: "KEY_MUTE"       # Send mute when dial is clicked
+  sensitivity: 1.0             # Dial sensitivity (1.0 = normal, 2.0 = double, 0.5 = half)
+
+# UInput device settings
+uinput_device_name: "huion-keydial-mini-uinput"
+
+# Connection settings
+connection_timeout: 10.0  # Timeout for device connection in seconds
+
+# Debug mode
+debug_mode: false  # Set to true for verbose logging

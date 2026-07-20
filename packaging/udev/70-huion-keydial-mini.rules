@@ -1,0 +1,12 @@
+# Access rules for the Huion Keydial Mini.
+# MUST be numbered below 73: systemd's 73-seat-late.rules is what turns the
+# "uaccess" tag into an ACL for the logged-in user — tags added after it are ignored.
+
+# Grant the logged-in user access to the keydial input event devices
+KERNEL=="event*", SUBSYSTEM=="input", ATTRS{name}=="*Keydial*", TAG+="uaccess"
+# Ensure the keydial is not treated as a tablet
+KERNEL=="event*", SUBSYSTEM=="input", ATTRS{name}=="*Keydial*", ENV{ID_INPUT_TABLET}="0"
+
+# Grant the logged-in user access to /dev/uinput so the user-level service can
+# create the virtual device without root or blanket input-group membership
+KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"

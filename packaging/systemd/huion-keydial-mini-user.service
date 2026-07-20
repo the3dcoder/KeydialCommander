@@ -1,0 +1,13 @@
+[Unit]
+Description=Huion Keydial Mini Driver
+After=bluetooth.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/huion-keydial-mini
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

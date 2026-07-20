@@ -1,0 +1,109 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "huion-keydial-mini-driver"
+version = "1.2.1"
+description = "Keydial Commander — Linux driver and GUI for the Huion Keydial Mini (K20)"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Earl", email = "earl@bigbwain.com"}
+]
+keywords = ["huion", "keydial", "k20", "linux", "evdev", "uinput", "driver", "macro-keypad", "gui"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Hardware :: Hardware Drivers",
+]
+dependencies = [
+    "evdev>=1.6.1",
+    "click>=8.1.7",
+    "ruamel.yaml>=0.17.21",
+    "aiohttp>=3.9",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "pyyaml>=6.0.1",
+]
+dev = [
+    "build",
+    "installer"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/the3dcoder/KeydialCommander"
+"Bug Reports" = "https://github.com/the3dcoder/KeydialCommander/issues"
+"Source" = "https://github.com/the3dcoder/KeydialCommander"
+
+[project.scripts]
+huion-keydial-mini = "huion_keydial_mini.main:main"
+keydialctl = "huion_keydial_mini.keydialctl:cli"
+
+[tool.setuptools.package-data]
+huion_keydial_mini = ["web/**/*"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--tb=short",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "hid_parser: HID parser specific tests",
+    "combo: Button combo functionality tests",
+    "keybind_manager: Keybind manager functionality tests",
+    "asyncio: Asyncio tests",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]

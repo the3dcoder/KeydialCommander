@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direction C — "Command Grid" (dense pro-tool, table-first)</title>
+<style>
+  :root{
+    --bg:#0f1214; --panel:#151a1e; --panel2:#1b2126; --line:#263038; --accent:#2dd4a7;
+    --accent-soft:rgba(45,212,167,.12); --text:#e6edf1; --muted:#7d8b96; --warn:#f5a623; --mono:"JetBrains Mono","Fira Code",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#0a0c0e;color:var(--text);font:13.5px/1.45 "Inter",system-ui,sans-serif;padding:18px;}
+  .frame{max-width:1180px;margin:0 auto;background:var(--bg);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.55);}
+  .top{display:flex;align-items:center;gap:14px;padding:9px 14px;background:var(--panel);border-bottom:1px solid var(--line);}
+  .logo{font-weight:800;font-family:var(--mono);font-size:14px;color:var(--accent);}
+  .tabs{display:flex;gap:2px;}
+  .tab{padding:6px 14px;font-size:13px;color:var(--muted);border-radius:7px;cursor:pointer;}
+  .tab.on{background:var(--panel2);color:var(--text);font-weight:600;}
+  .spacer{flex:1}
+  .stat{font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;gap:14px;}
+  .stat b{color:var(--accent);font-weight:600;}
+  .cols{display:grid;grid-template-columns:250px 1fr;min-height:560px;}
+  /* left rail */
+  .rail{border-right:1px solid var(--line);background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:16px;}
+  .rail h4{font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .mini{background:#22262c;border:1px solid #333a44;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;align-items:center;}
+  .mrow{display:flex;gap:5px;align-items:center;width:100%;}
+  .mdial{width:30px;height:30px;border-radius:50%;background:#3a3f48;border:1px solid #4d525d;margin-right:auto;}
+  .mgrid{display:grid;grid-template-columns:repeat(4,30px);grid-auto-rows:26px;gap:4px;}
+  .mk{border-radius:5px;background:#31363e;border:1px solid #3f4550;display:grid;place-items:center;font-size:8.5px;color:#828a97;cursor:pointer;}
+  .mk.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:700;}
+  .mk.tall{grid-row:span 2;} .mk.wide{grid-column:span 2;}
+  .plist .p{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px;}
+  .plist .p.on{background:var(--accent-soft);color:var(--text);border:1px solid var(--accent);}
+  .plist .p .n{font-family:var(--mono);font-size:11px;}
+  .dev{margin-top:auto;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.7;}
+  .dev b{color:var(--text);font-weight:600;}
+  .ok{color:var(--accent);}
+  /* main table */
+  .main{display:flex;flex-direction:column;}
+  .toolbar{display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);align-items:center;}
+  .tbtn{padding:7px 13px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);font-size:12.5px;cursor:pointer;}
+  .tbtn.pri{background:var(--accent);border-color:var(--accent);color:#04211a;font-weight:700;}
+  .filter{margin-left:auto;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--muted);padding:7px 12px;font-size:12.5px;width:200px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel);}
+  td{padding:8px 14px;border-bottom:1px solid #1c232a;vertical-align:middle;}
+  tr:hover td{background:#161c22;}
+  tr.editing td{background:var(--accent-soft);border-top:1px solid var(--accent);border-bottom:1px solid var(--accent);}
+  .kid{font-family:var(--mono);font-size:12px;color:var(--muted);}
+  .kid b{color:var(--text);font-weight:600;}
+  .bind{font-family:var(--mono);font-size:12.5px;}
+  .bind .kb{background:#232b33;border:1px solid #37414c;border-radius:5px;padding:2px 7px;margin-right:4px;}
+  .type{font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);}
+  .type.keys{border-color:#3d6ecf;color:#7ea7f0;}
+  .type.macro{border-color:#b06fd8;color:#cf9df0;}
+  .type.app{border-color:#cf9d3d;color:#ecc06a;}
+  .stick{font-family:var(--mono);font-size:11px;color:var(--warn);}
+  .dim{color:#525d68;}
+  .edit-inline{display:flex;gap:8px;align-items:center;}
+  .edit-inline input{background:#0f1418;border:1px solid var(--accent);border-radius:7px;color:var(--text);font-family:var(--mono);font-size:12.5px;padding:6px 10px;width:220px;}
+  .edit-inline .go{background:var(--accent);color:#04211a;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;}
+  .foot{margin-top:auto;display:flex;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+  .foot .u{color:var(--warn);}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="top">
+    <div class="logo">keydial://</div>
+    <div class="tabs"><div class="tab on">Bindings</div><div class="tab">Macros</div><div class="tab">Profiles</div><div class="tab">Monitor</div><div class="tab">Daemon</div></div>
+    <div class="spacer"></div>
+    <div class="stat"><span>BT <b>●</b> 90%</span><span>daemon <b>active</b></span><span>sock <b>ok</b></span></div>
+  </div>
+  <div class="cols">
+    <div class="rail">
+      <div>
+        <h4>Device map</h4>
+        <div class="mini">
+          <div class="mrow"><div class="mdial"></div><span style="font-family:var(--mono);font-size:9px;color:#5b626e">K20</span></div>
+          <div class="mgrid">
+            <div class="mk">1</div><div class="mk">2</div><div class="mk">3</div><div class="mk">4</div>
+            <div class="mk">5</div><div class="mk on">6</div><div class="mk">7</div><div class="mk">8</div>
+            <div class="mk">9</div><div class="mk">10</div><div class="mk">11</div><div class="mk">12</div>
+            <div class="mk">13</div><div class="mk">14</div><div class="mk">15</div><div class="mk tall">16</div>
+            <div class="mk wide">17</div><div class="mk">18</div>
+          </div>
+        </div>
+      </div>
+      <div class="plist">
+        <h4>Profiles</h4>
+        <div class="p on"><span>Krita</span><span class="n">21 binds</span></div>
+        <div class="p"><span>Default</span><span class="n">6 binds</span></div>
+        <div class="p"><span>DaVinci</span><span class="n">14 binds</span></div>
+        <div class="p"><span>+ new profile</span></div>
+      </div>
+      <div class="dev">
+        <div><b>Keydial mini-504</b></div>
+        <div>20:23:06:01:8A:B0</div>
+        <div>link <span class="ok">bluetooth</span> · batt <span class="ok">90%</span></div>
+        <div>uptime 2h 14m · events 1 204</div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="toolbar">
+        <div class="tbtn pri">+ Bind key</div>
+        <div class="tbtn">+ Chord</div>
+        <div class="tbtn">Import</div>
+        <div class="tbtn">Export</div>
+        <input class="filter" placeholder="/ filter bindings…">
+      </div>
+      <table>
+        <tr><th style="width:120px">Key</th><th style="width:110px">Type</th><th>Action</th><th style="width:70px">Sticky</th><th style="width:60px"></th></tr>
+        <tr><td class="kid"><b>KEY_1</b> · BUTTON_1</td><td><span class="type keys">keys</span></td><td class="bind"><span class="kb">Ctrl</span><span class="kb">Z</span><span class="dim">undo</span></td><td class="dim">—</td><td class="dim">✎ ✕</td></tr>
+        <tr><td class="kid"><b>KEY_2</b> · BUTTON_2</td><td><span class="type keys">keys</span></td><td class="bind"><span class="kb">Ctrl</span><span class="kb">Y</span><span class="dim">redo</span></td><td class="dim">—</td><td class="dim">✎ ✕</td></tr>
+        <tr class="editing"><td class="kid"><b>KEY_6</b> · BUTTON_6</td><td><span class="type keys">keys</span></td><td>
+          <div class="edit-inline"><input value="KEY_LEFTCTRL+KEY_SHIFT+KEY_E" spellcheck="false"><span class="go">↵ apply</span></div>
+        </td><td class="dim">—</td><td class="dim">✎ ✕</td></tr>
+        <tr><td class="kid"><b>KEY_13</b> · BUTTON_13</td><td><span class="type keys">keys</span></td><td class="bind"><span class="kb">Ctrl</span><span class="dim">modifier hold</span></td><td class="stick">STICKY</td><td class="dim">✎ ✕</td></tr>
+        <tr><td class="kid"><b>KEY_16</b> · BUTTON_16</td><td><span class="type macro">macro</span></td><td class="bind"><span class="dim">flatten-export.yaml · 4 steps · 120 ms gaps</span></td><td class="dim">—</td><td class="dim">✎ ✕</td></tr>
+        <tr><td class="kid"><b>KEY_17</b> · BUTTON_17</td><td><span class="type keys">keys</span></td><td class="bind"><span class="kb">Space</span><span class="dim">pan canvas</span></td><td class="stick">STICKY</td><td class="dim">✎ ✕</td></tr>
+        <tr><td class="kid"><b>CHORD</b> · 1+2</td><td><span class="type app">launch</span></td><td class="bind"><span class="dim">flatpak run org.kde.krita</span></td><td class="dim">—</td><td class="dim">✎ ✕</td></tr>
+        <tr><td class="kid"><b>DIAL ⟳</b> · CW</td><td><span class="type keys">keys</span></td><td class="bind"><span class="kb">]</span><span class="dim">brush +  · ×1 per detent</span></td><td class="dim">—</td><td class="dim">✎ ✕</td></tr>
+        <tr><td class="kid"><b>DIAL ⟲</b> · CCW</td><td><span class="type keys">keys</span></td><td class="bind"><span class="kb">[</span><span class="dim">brush −</span></td><td class="dim">—</td><td class="dim">✎ ✕</td></tr>
+        <tr><td class="kid"><b>DIAL ⦿</b> · CLICK</td><td><span class="type keys">keys</span></td><td class="bind"><span class="dim">cycle dial mode → zoom / brush / scroll</span></td><td class="dim">—</td><td class="dim">✎ ✕</td></tr>
+      </table>
+      <div class="foot"><span>18 keys · 3 dial actions · 1 chord · <span class="u">1 unsaved change</span></span><span>last event: BUTTON_6 press 00:00:02 ago</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

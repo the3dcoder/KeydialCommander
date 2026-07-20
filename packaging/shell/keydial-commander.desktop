@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Keydial Commander
+GenericName=Macro Keypad Configurator
+Comment=Configure the Huion Keydial Mini (K20)
+Exec=keydial-commander
+Icon=input-keyboard
+Terminal=false
+Categories=Utility;Settings;HardwareSettings;
+Keywords=huion;keydial;macro;keypad;shortcut;
+StartupWMClass=Keydial Commander

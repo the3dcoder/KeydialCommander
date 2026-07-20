@@ -1,0 +1,5 @@
+#!/bin/sh
+# Launch the Keydial Commander desktop shell under the SYSTEM python3
+# (it needs the `gi` GObject bindings, which the driver's venv lacks).
+SHELL_PY="${KEYDIAL_SHELL:-$HOME/.local/share/keydial-commander/commander_shell.py}"
+exec python3 "$SHELL_PY" "$@"

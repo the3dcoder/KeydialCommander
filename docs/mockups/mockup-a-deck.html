@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direction A — "Deck" (dark pro, action library + drag/drop)</title>
+<style>
+  :root{
+    --bg:#17181c; --panel:#1f2127; --panel2:#24262e; --tile:#2b2e37; --tile-hi:#343845;
+    --line:#32353f; --accent:#7c5cff; --accent-soft:rgba(124,92,255,.16);
+    --text:#e9ebf2; --muted:#8b8fa3; --good:#3ecf8e; --warn:#f5a623;
+    --radius:10px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:#0d0e11; color:var(--text); font:14px/1.45 "Inter","Segoe UI",system-ui,sans-serif; padding:18px;}
+  .frame{max-width:1180px; margin:0 auto; background:var(--bg); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.5);}
+  /* ---------- top bar ---------- */
+  .topbar{display:flex; align-items:center; gap:16px; padding:10px 16px; background:var(--panel); border-bottom:1px solid var(--line);}
+  .logo{display:flex; align-items:center; gap:9px; font-weight:700; letter-spacing:.2px;}
+  .logo .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--accent),#4b9fff);display:grid;place-items:center;font-size:13px;}
+  .profiles{display:flex; gap:6px; margin-left:18px;}
+  .chip{padding:6px 14px; border-radius:999px; background:var(--panel2); border:1px solid var(--line); color:var(--muted); cursor:pointer; font-size:13px;}
+  .chip.active{background:var(--accent-soft); border-color:var(--accent); color:var(--text); font-weight:600;}
+  .chip.add{border-style:dashed;}
+  .spacer{flex:1}
+  .status{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted);}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--good); box-shadow:0 0 8px var(--good);}
+  .batt{border:1px solid var(--line); border-radius:6px; padding:2px 8px; font-size:12px;}
+  /* ---------- layout ---------- */
+  .cols{display:grid; grid-template-columns:230px 1fr 290px; min-height:560px;}
+  /* ---------- action library ---------- */
+  .lib{border-right:1px solid var(--line); background:var(--panel); padding:12px; overflow:auto;}
+  .search{width:100%; background:var(--panel2); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:8px 10px; font-size:13px; margin-bottom:12px;}
+  .group{margin-bottom:14px;}
+  .group h4{font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin:0 0 6px 4px;}
+  .action{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; background:var(--panel2); border:1px solid var(--line); margin-bottom:6px; cursor:grab; font-size:13px;}
+  .action:hover{border-color:var(--accent); background:var(--accent-soft);}
+  .action .ic{width:22px;height:22px;border-radius:6px;background:var(--tile);display:grid;place-items:center;font-size:12px;}
+  .hint{font-size:11.5px;color:var(--muted); margin-top:2px;}
+  /* ---------- device stage ---------- */
+  .stage{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:26px; background:
+    radial-gradient(600px 300px at 50% 20%, rgba(124,92,255,.07), transparent 60%);}
+  .device{background:linear-gradient(180deg,#26272c,#1c1d22); border:1px solid #3a3c44; border-radius:22px; padding:16px 18px 20px; box-shadow:0 18px 50px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05);}
+  .head{display:flex; align-items:center; gap:14px; margin-bottom:14px;}
+  .dial{position:relative; width:86px;height:86px;border-radius:50%; background:conic-gradient(from 200deg,#3a3d46,#22242a 40%,#3a3d46 70%,#22242a); border:2px solid #464a55; display:grid; place-items:center;}
+  .dial .btn{width:34px;height:34px;border-radius:50%;background:#2b2e37;border:1px solid #4a4e5a; box-shadow:inset 0 2px 4px rgba(0,0,0,.5);}
+  .dial .mode{position:absolute; bottom:-10px; left:50%; transform:translateX(-50%); background:var(--accent); color:#fff; font-size:10px; padding:2px 8px; border-radius:999px; white-space:nowrap;}
+  .brand{color:#565a66; font-weight:800; letter-spacing:2px; font-size:12px;}
+  .grid{display:grid; grid-template-columns:repeat(4,64px); grid-auto-rows:56px; gap:9px;}
+  .key{position:relative; border-radius:9px; background:linear-gradient(180deg,var(--tile-hi),var(--tile)); border:1px solid #3d414c; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer; transition:transform .06s;}
+  .key:hover{transform:translateY(-1px); border-color:#565b69;}
+  .key .kn{position:absolute; top:3px; left:6px; font-size:8.5px; color:#6a6e7c;}
+  .key .ic{font-size:15px;}
+  .key .lbl{font-size:9.5px; color:var(--muted); max-width:58px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .key.assigned .lbl{color:#c9cbdc;}
+  .key.selected{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft), 0 0 14px rgba(124,92,255,.35);}
+  .key.empty .ic{color:#4a4e5a;}
+  .key.tall{grid-row:span 2;}
+  .key.wide{grid-column:span 2;}
+  .key.sticky::after{content:"S"; position:absolute; top:3px; right:5px; font-size:8px; background:var(--warn); color:#000; border-radius:3px; padding:0 3px; font-weight:700;}
+  .stagefoot{margin-top:18px; color:var(--muted); font-size:12.5px; display:flex; gap:18px;}
+  .kbd{background:var(--panel2); border:1px solid var(--line); border-radius:5px; padding:1px 6px; font-size:11px;}
+  /* ---------- inspector ---------- */
+  .insp{border-left:1px solid var(--line); background:var(--panel); padding:16px; display:flex; flex-direction:column; gap:14px;}
+  .insp h3{font-size:13px; display:flex; align-items:center; gap:8px;}
+  .badge{background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent); font-size:10.5px; border-radius:5px; padding:1px 7px;}
+  .field label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:5px;}
+  .field input,.field select{width:100%; background:var(--panel2); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:8px 10px; font-size:13px;}
+  .capture{display:flex; align-items:center; gap:6px; background:var(--panel2); border:1px dashed var(--accent); border-radius:8px; padding:10px; justify-content:center;}
+  .capture .k{background:var(--tile-hi); border:1px solid #4a4e5a; border-bottom-width:2px; border-radius:6px; padding:3px 9px; font-size:12.5px; font-weight:600;}
+  .capnote{text-align:center; font-size:11px; color:var(--muted);}
+  .row{display:flex; align-items:center; justify-content:space-between;}
+  .switch{width:36px;height:20px;border-radius:999px;background:var(--accent);position:relative;}
+  .switch::after{content:"";position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#fff;}
+  .btns{display:flex; gap:8px; margin-top:auto;}
+  .b{flex:1; padding:9px 0; border-radius:8px; border:1px solid var(--line); background:var(--panel2); color:var(--text); font-size:13px; text-align:center; cursor:pointer;}
+  .b.primary{background:var(--accent); border-color:var(--accent); font-weight:600;}
+  .b.danger{color:#ff6b6b; border-color:#5a3038;}
+  .test{font-size:12px; color:var(--muted); text-align:center;}
+  .test a{color:var(--accent); text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="topbar">
+    <div class="logo"><div class="mark">K</div>Keydial&nbsp;Commander</div>
+    <div class="profiles">
+      <div class="chip">Default</div>
+      <div class="chip active">Krita</div>
+      <div class="chip">DaVinci</div>
+      <div class="chip add">+ New</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="status"><span class="dot"></span> Keydial mini-504 · Bluetooth <span class="batt">▮▮▮▮▯ 90%</span> ⚙</div>
+  </div>
+  <div class="cols">
+    <!-- ACTION LIBRARY -->
+    <div class="lib">
+      <input class="search" placeholder="🔍 Search actions…">
+      <div class="group"><h4>Input</h4>
+        <div class="action"><div class="ic">⌨</div>Keystroke</div>
+        <div class="action"><div class="ic">📋</div>Text snippet</div>
+        <div class="action"><div class="ic">⚡</div>Macro (multi-step)</div>
+      </div>
+      <div class="group"><h4>System</h4>
+        <div class="action"><div class="ic">🚀</div>Launch app</div>
+        <div class="action"><div class="ic">🌐</div>Open URL</div>
+        <div class="action"><div class="ic">$</div>Run command</div>
+      </div>
+      <div class="group"><h4>Media</h4>
+        <div class="action"><div class="ic">⏯</div>Play / Pause</div>
+        <div class="action"><div class="ic">🔊</div>Volume</div>
+      </div>
+      <div class="group"><h4>Device</h4>
+        <div class="action"><div class="ic">⇄</div>Switch profile</div>
+        <div class="action"><div class="ic">◎</div>Dial mode</div>
+      </div>
+      <div class="hint">Drag an action onto a key — or click a key and configure it in the inspector.</div>
+    </div>
+    <!-- DEVICE STAGE -->
+    <div class="stage">
+      <div class="device">
+        <div class="head">
+          <div class="dial"><div class="btn"></div><div class="mode">Zoom · Brush · Scroll</div></div>
+          <div class="brand">HUION</div>
+        </div>
+        <div class="grid">
+          <div class="key assigned"><span class="kn">1</span><span class="ic">↩</span><span class="lbl">Undo</span></div>
+          <div class="key assigned"><span class="kn">2</span><span class="ic">↪</span><span class="lbl">Redo</span></div>
+          <div class="key assigned"><span class="kn">3</span><span class="ic">💾</span><span class="lbl">Save</span></div>
+          <div class="key empty"><span class="kn">4</span><span class="ic">+</span><span class="lbl">Assign</span></div>
+          <div class="key assigned"><span class="kn">5</span><span class="ic">🖌</span><span class="lbl">Brush</span></div>
+          <div class="key assigned selected"><span class="kn">6</span><span class="ic">⌫</span><span class="lbl">Eraser</span></div>
+          <div class="key assigned"><span class="kn">7</span><span class="ic">🎨</span><span class="lbl">Picker</span></div>
+          <div class="key assigned"><span class="kn">8</span><span class="ic">🔍</span><span class="lbl">Zoom fit</span></div>
+          <div class="key assigned"><span class="kn">9</span><span class="ic">◧</span><span class="lbl">Mirror</span></div>
+          <div class="key assigned"><span class="kn">10</span><span class="ic">⟲</span><span class="lbl">Rotate ⟲</span></div>
+          <div class="key assigned"><span class="kn">11</span><span class="ic">⟳</span><span class="lbl">Rotate ⟳</span></div>
+          <div class="key empty"><span class="kn">12</span><span class="ic">+</span><span class="lbl">Assign</span></div>
+          <div class="key assigned sticky"><span class="kn">13</span><span class="ic">⌃</span><span class="lbl">Ctrl (hold)</span></div>
+          <div class="key assigned sticky"><span class="kn">14</span><span class="ic">⌥</span><span class="lbl">Alt (hold)</span></div>
+          <div class="key assigned sticky"><span class="kn">15</span><span class="ic">⇧</span><span class="lbl">Shift (hold)</span></div>
+          <div class="key assigned tall"><span class="kn">16</span><span class="ic">⚡</span><span class="lbl">Flatten</span></div>
+          <div class="key assigned wide"><span class="kn">17</span><span class="ic">␣</span><span class="lbl">Pan (Space)</span></div>
+          <div class="key assigned"><span class="kn">18</span><span class="ic">M</span><span class="lbl">Merge</span></div>
+        </div>
+      </div>
+      <div class="stagefoot">
+        <span>💡 Press a physical key to highlight it here</span>
+        <span>Chord: hold <span class="kbd">two keys</span> to bind combos</span>
+      </div>
+    </div>
+    <!-- INSPECTOR -->
+    <div class="insp">
+      <h3>Key 6 <span class="badge">BUTTON_6</span></h3>
+      <div class="field"><label>Action type</label>
+        <select><option>Keystroke</option><option>Macro</option><option>Launch app</option><option>Switch profile</option></select>
+      </div>
+      <div class="field"><label>Shortcut — click, then press keys to capture</label>
+        <div class="capture"><span class="k">Ctrl</span>+<span class="k">Shift</span>+<span class="k">E</span></div>
+        <div class="capnote">…or type key names manually</div>
+      </div>
+      <div class="field"><label>Label (shown on this screen)</label><input value="Eraser"></div>
+      <div class="row"><span style="font-size:13px">Sticky <span style="color:var(--muted);font-size:11.5px">(hold until released)</span></span><div class="switch"></div></div>
+      <div class="test">▶ <a href="#">Test-fire this action</a></div>
+      <div class="btns"><div class="b danger">Remove</div><div class="b">Revert</div><div class="b primary">Save</div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
