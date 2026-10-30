@@ -3,6 +3,20 @@
 Working document. Updated as phases complete; see `WORKLOG.md` for the running change log and
 `AUDIT-2026-07-19.md` for defect IDs referenced below (H1…L9).
 
+## Release onboarding, 2026-10-30
+
+The first public download is a clearly marked `1.3.0a1` preview: built web UI,
+Python wheel, Linux bundle, installation guide and checksums. The README now
+separates downloads, developer builds and current qualification limits.
+[Artifact evidence](development/2026-10-30-release-artifacts.md) records a fresh
+wheel installation outside the checkout, isolated UI/API checks with no Node
+on `PATH`, 192 Python passes, 15 browser passes, build and lint.
+
+Next: design and qualify one native Ubuntu package. Ubuntu 26.04 first and
+explicit first start with optional login auto-start are provisional interview
+recommendations, not recorded user answers. See the
+[installation interview](development/2026-10-30-release-direction.md).
+
 ## Recovery update, 2026-10-30
 
 The approved K20 recovery software milestone now implements owned-key cleanup,
@@ -132,8 +146,8 @@ the visual contract. Split into **2A backend** (plan:
 
 - [ ] Fix Debian/RPM packaging (M7), refresh Arch/Nix, add Commander to packages
 - [ ] CI: lint + pytest + frontend build + package smoke
-- [ ] Docs overhaul (install, GUI guide, protocol doc), screenshots
-- [ ] Publish tagged releases + built artifacts on the KeydialCommander repo
+- [ ] Complete GUI/protocol documentation; README and preview install/download guides refreshed
+- [ ] Qualify stable release artifacts; first tagged preview contains prebuilt downloads
 
 ## Later / wishlist
 

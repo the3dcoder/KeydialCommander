@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "huion-keydial-mini-driver"
-version = "1.2.1"
+version = "1.3.0a1"
 description = "Keydial Commander — Linux driver and GUI for the Huion Keydial Mini (K20)"
 readme = "README.md"
 requires-python = ">=3.8"
