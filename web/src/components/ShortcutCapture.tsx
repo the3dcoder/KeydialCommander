@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { codeToKey, MODIFIER_KEYS } from '../codeToKey'
 import { useKeyList } from '../api/queries'
 
@@ -8,24 +8,59 @@ export function ShortcutCapture({ value, onChange }: {
 }) {
   const [capturing, setCapturing] = useState(false)
   const [manual, setManual] = useState(false)
+  const modifiers = useRef<string[]>([])
   const { data: keyList } = useKeyList()
+
+  const reset = () => {
+    modifiers.current = []
+    setCapturing(false)
+  }
+  const start = () => {
+    modifiers.current = []
+    setCapturing(true)
+  }
+  const finish = (keys: string[]) => {
+    reset()
+    onChange(keys)
+  }
+
+  useEffect(() => {
+    const onWindowBlur = () => {
+      modifiers.current = []
+      setCapturing(false)
+    }
+    window.addEventListener('blur', onWindowBlur)
+    return () => window.removeEventListener('blur', onWindowBlur)
+  }, [])
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (!capturing) return
     e.preventDefault()
-    const mods: string[] = []
-    if (e.ctrlKey) mods.push('KEY_LEFTCTRL')
-    if (e.shiftKey) mods.push('KEY_LEFTSHIFT')
-    if (e.altKey) mods.push('KEY_LEFTALT')
-    if (e.metaKey) mods.push('KEY_LEFTMETA')
+    if (e.repeat) return
     const main = codeToKey(e.code)
+    const mods = modifiers.current
+    if (main && MODIFIER_KEYS.has(main) && !mods.includes(main)) mods.push(main)
+    // A modifier may already be held when this field receives focus.
+    const held: [boolean, string, string][] = [
+      [e.ctrlKey, 'KEY_LEFTCTRL', 'KEY_RIGHTCTRL'],
+      [e.shiftKey, 'KEY_LEFTSHIFT', 'KEY_RIGHTSHIFT'],
+      [e.altKey, 'KEY_LEFTALT', 'KEY_RIGHTALT'],
+      [e.metaKey, 'KEY_LEFTMETA', 'KEY_RIGHTMETA'],
+    ]
+    for (const [pressed, left, right] of held) {
+      if (pressed && !mods.includes(left) && !mods.includes(right)) mods.push(left)
+    }
     if (main && !MODIFIER_KEYS.has(main)) {
-      onChange([...mods, main])
-      setCapturing(false)
-    } else if (main && MODIFIER_KEYS.has(main)) {
-      // pressing only a modifier: capture the modifier itself
-      onChange([main])
-      setCapturing(false)
+      finish([...mods, main])
+    }
+  }
+
+  const onKeyUp = (e: React.KeyboardEvent) => {
+    if (!capturing) return
+    e.preventDefault()
+    const key = codeToKey(e.code)
+    if (key && MODIFIER_KEYS.has(key) && modifiers.current.includes(key)) {
+      finish([...modifiers.current])
     }
   }
 
@@ -38,9 +73,11 @@ export function ShortcutCapture({ value, onChange }: {
       <div
         tabIndex={0}
         className="capture"
-        onFocus={() => setCapturing(true)}
-        onBlur={() => setCapturing(false)}
+        onFocus={start}
+        onClick={start}
+        onBlur={reset}
         onKeyDown={onKeyDown}
+        onKeyUp={onKeyUp}
         style={{ outline: capturing ? '2px solid var(--accent)' : undefined }}
       >
         {label}
@@ -50,7 +87,7 @@ export function ShortcutCapture({ value, onChange }: {
           {manual ? 'hide manual picker' : 'pick manually'}
         </button>
         {value.length > 0 && (
-          <button className="linkbtn" onClick={() => onChange([])}>clear keys</button>
+          <button className="linkbtn" onClick={() => finish([])}>clear keys</button>
         )}
       </div>
       {manual && keyList && (

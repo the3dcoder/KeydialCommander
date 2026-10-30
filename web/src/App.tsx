@@ -1,11 +1,9 @@
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
   type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useEvents } from './api/useEvents'
 import { useApplyTheme } from './theme'
-import { useQueryClient } from '@tanstack/react-query'
-import { useStatus, usePutBinding, keys as qk } from './api/queries'
-import type { ProfileBindings } from './api/types'
+import { useStatus } from './api/queries'
 import { useUI } from './store'
 import { ProfileBar } from './components/ProfileBar'
 import { StatusStrip } from './components/StatusStrip'
@@ -31,11 +29,12 @@ export default function App() {
   useApplyTheme()
   useEvents()
   const { data: status, isError, isLoading } = useStatus()
-  const put = usePutBinding(status?.active_profile || '')
-  const qc = useQueryClient()
-  const select = useUI((s) => s.select)
+  const stageDraft = useUI((s) => s.stageDraft)
+  const clearDraft = useUI((s) => s.clearDraft)
   const [dragging, setDragging] = useState<Template | null>(null)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+
+  useEffect(() => { clearDraft() }, [status?.active_profile, clearDraft])
 
   const onDragStart = (e: DragStartEvent) => {
     setDragging((e.active.data.current?.template as Template) || null)
@@ -44,14 +43,8 @@ export default function App() {
     setDragging(null)
     const template = e.active.data.current?.template as Template | undefined
     const target = e.over?.id as string | undefined
-    if (template && target) {
-      const cached = qc.getQueryData<ProfileBindings>(qk.bindings(status?.active_profile || ''))
-      if (cached?.bindings[target] &&
-          !window.confirm(`${target} is already bound. Replace it?`)) {
-        return
-      }
-      put.mutate({ actionId: target, action: template.make() })
-      select(target)
+    if (template && target && status?.active_profile) {
+      stageDraft(status.active_profile, target, template.make())
     }
   }
 

@@ -3,6 +3,24 @@
 Working document. Updated as phases complete; see `WORKLOG.md` for the running change log and
 `AUDIT-2026-07-19.md` for defect IDs referenced below (H1…L9).
 
+## Recovery update, 2026-10-30
+
+The approved K20 recovery software milestone now implements owned-key cleanup,
+managed macro cancellation, validated profile/binding boundaries, lost-input and
+reader recovery, neutral rearm and local readiness/fault status. Final checks:
+192 Python tests passed with hardware capture excluded, 15 browser regressions
+passed, build/lint passed. See [qualification evidence](development/2026-10-30-k20-qualification.md).
+Current Bluetooth/USB qualification and packaging remain open; no installed
+service, profile, system rule or game deployment changed.
+
+## Current direction, 2026-10-29
+
+Keydial Commander remains the Linux K20 control center. KeyCommand is a separate browser game and repository for keycommand.io, with Type Sprint and Control Circuit, optional device identification and a Cloudflare Worker/D1 shared leaderboard. Start with `examples/keycommand-profile.yaml`; a live daemon bridge requires its own authenticated, revocable capture design.
+
+The current implementation map and remaining issues are in [the October review](AUDIT-2026-10-29.md). In particular, saved dial sensitivity is not currently applied by the evdev path, distribution packaging still needs repair, and USB hardware verification remains open. Older checked items below describe their original phase and do not establish that those features survived the input-layer migration.
+
+This update repairs shortcut capture and action-template drafts, restricts the synthetic device test, and adds browser-origin checks to the local API. The [KeyCommand design](superpowers/specs/2026-10-29-keycommand-design.md) and [implementation plan](superpowers/plans/2026-10-29-keycommand-foundation.md) record the product decisions and project boundary.
+
 ## Vision
 
 Take the existing Bluetooth CLI driver and grow it into a real desktop application —

@@ -14,6 +14,9 @@ const DEFAULTS: Record<ActionType, Action> = {
 
 export function Inspector() {
   const selected = useUI((s) => s.selected)
+  const staged = useUI((s) => s.draft)
+  const stageDraft = useUI((s) => s.stageDraft)
+  const clearDraft = useUI((s) => s.clearDraft)
   const { data: status } = useStatus()
   const profile = status?.active_profile
   const { data: bindingsData } = useBindings(profile)
@@ -22,30 +25,40 @@ export function Inspector() {
   const del = useDeleteBinding(profile || '')
 
   const existing = selected ? bindingsData?.bindings[selected] : undefined
-  const [draft, setDraft] = useState<Action>(DEFAULTS.keystroke)
+  const draft = staged && staged.profile === profile && staged.actionId === selected
+    ? staged.action : existing || DEFAULTS.keystroke
   const [msg, setMsg] = useState<string | null>(null)
 
   useEffect(() => {
     setMsg(null)
-    if (existing) setDraft(JSON.parse(JSON.stringify(existing)))
-    else setDraft(DEFAULTS.keystroke)
-  }, [selected, existing])
+  }, [selected, profile])
+  useEffect(() => {
+    if (staged) setMsg(null)
+  }, [staged])
 
   if (!selected) {
     return <div className="muted" style={{ fontSize: 13 }}>Select a key or dial control to edit it.</div>
   }
 
+  const setDraft = (action: Action) => {
+    if (profile) stageDraft(profile, selected, action)
+  }
   const setType = (t: ActionType) => setDraft(JSON.parse(JSON.stringify(DEFAULTS[t])))
-  const patch = (p: Partial<Action>) => setDraft((d) => ({ ...d, ...p }))
+  const patch = (p: Partial<Action>) => setDraft({ ...draft, ...p })
 
   const save = async () => {
     try {
       await put.mutateAsync({ actionId: selected, action: draft })
+      if (staged && useUI.getState().draft === staged) clearDraft()
       setMsg('Saved')
     } catch (e) { setMsg(String(e)) }
   }
   const clear = async () => {
-    try { await del.mutateAsync(selected); setMsg('Cleared') } catch (e) { setMsg(String(e)) }
+    try {
+      await del.mutateAsync(selected)
+      if (useUI.getState().draft === staged) clearDraft()
+      setMsg('Cleared')
+    } catch (e) { setMsg(String(e)) }
   }
   const testFire = async () => {
     try { await api.testFire(draft); setMsg('Fired') } catch (e) { setMsg(String(e)) }
@@ -70,7 +83,8 @@ export function Inspector() {
       {draft.type === 'keystroke' && (
         <div>
           <label className="field">Shortcut</label>
-          <ShortcutCapture value={draft.keys || []} onChange={(keys) => patch({ keys })} />
+          <ShortcutCapture key={`${profile}:${selected}`} value={draft.keys || []}
+                           onChange={(keys) => patch({ keys })} />
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 13 }}>
             <input type="checkbox" checked={!!draft.sticky} onChange={(e) => patch({ sticky: e.target.checked })} />
             Hold mode (sticky) — key stays pressed until released
@@ -79,7 +93,8 @@ export function Inspector() {
       )}
 
       {draft.type === 'macro' && (
-        <MacroEditor steps={draft.steps || []} onChange={(steps) => patch({ steps })} />
+        <MacroEditor key={`${profile}:${selected}`} steps={draft.steps || []}
+                     onChange={(steps) => patch({ steps })} />
       )}
 
       {draft.type === 'command' && (

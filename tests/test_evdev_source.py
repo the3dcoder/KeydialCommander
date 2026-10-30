@@ -60,7 +60,8 @@ def test_end_to_end_grab_and_read():
     EvdevSource grabs it and yields BUTTON_1 through the real read loop."""
     from evdev import UInput
 
-    caps = {ecodes.EV_KEY: [ecodes.KEY_K]}
+    caps = {ecodes.EV_KEY: [ecodes.KEY_K, ecodes.KEY_PLAYPAUSE],
+            ecodes.EV_REL: [ecodes.REL_WHEEL]}
     ui = UInput(caps, name="Keydial mini-504 Test Synthetic")
 
     async def run():
@@ -70,6 +71,7 @@ def test_end_to_end_grab_and_read():
             collected.append((ev.event_type, ev.key_code))
 
         src = EvdevSource(on_event=on_event, translator=InputTranslator(FakeMgr()),
+                          discover=lambda: [ui.device.path],
                           rescan_interval=0.2)
         await src.start()
         await asyncio.sleep(0.3)                # let grab + reader attach

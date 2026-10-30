@@ -9,10 +9,14 @@ from evdev import UInput, ecodes
 from .config import Config
 from .keymap import KEY_MAPPING
 from .input_events import InputEvent, EventType
-from .keybind_manager import KeybindManager, KeybindAction, EventType as BindEventType
+from .keybind_manager import KeybindManager
 
 
 logger = logging.getLogger(__name__)
+
+
+class OutputUnavailable(RuntimeError):
+    """The output endpoint is unavailable or its state is uncertain."""
 
 
 class UInputHandler:
@@ -26,6 +30,12 @@ class UInputHandler:
         self.keybind_manager = keybind_manager
         self.device: Optional[UInput] = None
         self.capabilities = self._build_capabilities()
+        self._activations = {}
+        self._owners = {}
+        self._possibly_down = set()
+        self.failed = False
+        self.cleanup_confirmed = True
+        self.on_fault = None
 
     async def start(self, retries: int = 10, delay: float = 0.5) -> None:
         """Create the virtual device without blocking the event loop (audit H6)."""
@@ -45,13 +55,81 @@ class UInputHandler:
         raise RuntimeError(f"Could not open uinput device after {retries} attempts: {last_error}")
 
     def close(self) -> None:
-        """Close the virtual device (idempotent)."""
-        if self.device is not None:
+        """Release owned output before retiring the endpoint; safe to repeat."""
+        try:
+            self.release_all()
+        except OutputUnavailable:
+            pass
+        self._close_endpoint()
+
+    def _close_endpoint(self):
+        device, self.device = self.device, None
+        if device is not None:
             try:
-                self.device.close()
-            except Exception as e:
-                logger.warning(f"Error closing uinput device: {e}")
-            self.device = None
+                device.close()
+            except Exception:
+                self.cleanup_confirmed = False
+                logger.exception("Error closing uinput endpoint")
+
+    def _fault(self, error):
+        if self.failed:
+            return
+        self.failed = True
+        self.cleanup_confirmed = True
+        # Include uncertain writes: a write or SYN can fail after taking effect.
+        for code in list(self._possibly_down):
+            try:
+                self.device.write(ecodes.EV_KEY, code, 0)
+                self.device.syn()
+            except Exception:
+                self.cleanup_confirmed = False
+        self._activations.clear()
+        self._owners.clear()
+        self._possibly_down.clear()
+        self._close_endpoint()
+        if self.on_fault:
+            self.on_fault(error)
+
+    def acquire(self, owner, keys):
+        """Acquire concrete keys for an activation without disturbing other owners."""
+        if self.failed or self.device is None:
+            raise OutputUnavailable("Output unavailable")
+        if owner in self._activations:
+            return
+        codes = tuple(dict.fromkeys(self.KEY_MAPPING[name] for name in keys
+                                    if name in self.KEY_MAPPING))
+        self._activations[owner] = codes
+        try:
+            for code in codes:
+                owners = self._owners.setdefault(code, set())
+                if not owners:
+                    self._possibly_down.add(code)
+                    self.device.write(ecodes.EV_KEY, code, 1)
+                    self.device.syn()
+                owners.add(owner)
+        except Exception as error:
+            self._fault(error)
+            raise OutputUnavailable("Output unavailable") from error
+
+    def release(self, owner):
+        """Release the activation's original keys, independent of current bindings."""
+        codes = self._activations.pop(owner, ())
+        try:
+            for code in reversed(codes):
+                owners = self._owners[code]
+                owners.discard(owner)
+                if not owners:
+                    self.device.write(ecodes.EV_KEY, code, 0)
+                    self.device.syn()
+                    self._possibly_down.discard(code)
+                    del self._owners[code]
+        except Exception as error:
+            self._fault(error)
+            raise OutputUnavailable("Output unavailable") from error
+
+    def release_all(self):
+        for owner in list(self._activations):
+            self.release(owner)
 
     def _build_capabilities(self) -> Dict:
         """Build device capabilities based on configuration and keybind manager."""
@@ -79,100 +157,21 @@ class UInputHandler:
         return capabilities
 
     async def send_event(self, event: InputEvent):
-        """Send an input event to the virtual device."""
-        if not self.device:
-            logger.warning("No virtual device available")
+        owner = ("binding", event.key_code)
+        # Release must precede the mutable binding lookup, even after deletion.
+        if event.event_type == EventType.KEY_RELEASE:
+            self.release(owner)
             return
-
-        try:
-            # Get the action ID from the event
-            action_id = self._get_action_id_from_event(event)
-            if not action_id:
-                logger.debug(f"No action ID found for event: {event}")
-                return
-
-            # Get the keybind action from the manager
-            if not self.keybind_manager:
-                logger.warning("No keybind manager available")
-                return
-
-            action = self.keybind_manager.get_action(action_id)
-            if not action:
-                logger.debug(f"No binding found for action: {action_id}")
-                return
-
-            # Execute the action based on its type
-            if action.type in ("keystroke", "keyboard"):
-                await self._send_keyboard_action(action, event)
-            else:
-                logger.warning(f"Unknown action type: {action.type}")
-
-        except Exception as e:
-            logger.error(f"Error sending event: {e}")
-
-    def _get_action_id_from_event(self, event: InputEvent) -> Optional[str]:
-        if event.key_code != None:
-            return event.key_code
-        else:
-            logger.warning(f"No keycode found for event: {event}")
-        return None
-
-    async def _send_keyboard_action(self, action: KeybindAction, event: InputEvent):
-        """Send a keyboard action."""
-        if not action.keys:
-            logger.warning("Keyboard action has no keys defined")
-            return
-
-        if not self.device:
-            logger.warning("No virtual device available")
-            return
-
-        # Determine if this is a press or release
-        is_press = event.event_type == EventType.KEY_PRESS
-
-        try:
-            if is_press:
-                # Press all keys in order
-                for key_name in action.keys:
-                    key_code = self.KEY_MAPPING.get(key_name)
-                    if key_code:
-                        self.device.write(evdev.ecodes.EV_KEY, key_code, 1)
-                        self.device.syn()
-                        logger.debug(f"Pressed key: {key_name}")
-                    else:
-                        logger.warning(f"Unknown key: {key_name}")
-            else:
-                # Release all keys in reverse order
-                for key_name in reversed(action.keys):
-                    key_code = self.KEY_MAPPING.get(key_name)
-                    if key_code:
-                        self.device.write(evdev.ecodes.EV_KEY, key_code, 0)
-                        self.device.syn()
-                        logger.debug(f"Released key: {key_name}")
-                    else:
-                        logger.warning(f"Unknown key: {key_name}")
-
-        except Exception as e:
-            logger.error(f"Error sending keyboard action: {e}")
+        action = (self.keybind_manager.get_action(event.key_code)
+                  if self.keybind_manager else None)
+        if action and action.type in ("keystroke", "keyboard"):
+            self.acquire(owner, action.keys or [])
 
     async def emit_keys(self, keys: List[str]):
-        """Tap a chord: press all keys in order, release in reverse. Used by
-        macros and test-fire (no binding lookup)."""
-        if not self.device or not keys:
-            return
-        try:
-            for name in keys:
-                code = self.KEY_MAPPING.get(name)
-                if code:
-                    self.device.write(evdev.ecodes.EV_KEY, code, 1)
-                    self.device.syn()
-            for name in reversed(keys):
-                code = self.KEY_MAPPING.get(name)
-                if code:
-                    self.device.write(evdev.ecodes.EV_KEY, code, 0)
-                    self.device.syn()
-        except Exception as e:
-            logger.error(f"Error emitting keys: {e}")
+        """A tap owns its keys for this atomic, non-suspending output operation."""
+        owner = object()
+        self.acquire(owner, keys)
+        self.release(owner)
 
     def get_supported_keys(self) -> List[str]:
         """Get list of supported key names."""

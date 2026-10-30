@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { Action } from './api/types'
 
 export type Theme = 'system' | 'light' | 'dark'
 
@@ -6,6 +7,10 @@ interface UIState {
   // currently selected control (action_id) in the DeviceStage, or null
   selected: string | null
   select: (id: string | null) => void
+
+  draft: { profile: string; actionId: string; action: Action } | null
+  stageDraft: (profile: string, actionId: string, action: Action) => void
+  clearDraft: () => void
 
   // identify mode: next physical press selects that control
   identify: boolean
@@ -21,7 +26,12 @@ interface UIState {
 
 export const useUI = create<UIState>((set) => ({
   selected: null,
-  select: (id) => set({ selected: id }),
+  select: (id) => set((s) => ({ selected: id, draft: s.selected === id ? s.draft : null })),
+  draft: null,
+  stageDraft: (profile, actionId, action) => set({
+    selected: actionId, draft: { profile, actionId, action },
+  }),
+  clearDraft: () => set({ draft: null }),
 
   identify: false,
   setIdentify: (on) => set({ identify: on }),

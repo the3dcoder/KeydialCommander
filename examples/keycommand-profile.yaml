@@ -1,0 +1,24 @@
+schema: 1
+dial_sensitivity: 1.0
+bindings:
+  BUTTON_1:
+    type: keystroke
+    keys: [KEY_D]
+  BUTTON_2:
+    type: keystroke
+    keys: [KEY_F]
+  BUTTON_3:
+    type: keystroke
+    keys: [KEY_J]
+  BUTTON_4:
+    type: keystroke
+    keys: [KEY_K]
+  DIAL_CW:
+    type: keystroke
+    keys: [KEY_RIGHT]
+  DIAL_CCW:
+    type: keystroke
+    keys: [KEY_LEFT]
+  DIAL_CLICK:
+    type: keystroke
+    keys: [KEY_ENTER]
