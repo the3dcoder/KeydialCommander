@@ -16,21 +16,28 @@ K20 Bluetooth or USB HID
 
 The device is a standard HID keyboard. Bluetooth input arrives through the kernel input subsystem, rather than through a vendor GATT notification. `hid_parser.py`, `bluetooth_watcher.py`, bleak, and the HID unbind helper were removed during the evdev migration. The verified firmware map is in `docs/DEVICE-K20.md`, section G.
 
-`EvdevSource` discovers matching event nodes by Keydial name or vendor/product IDs, excludes the configured virtual output device, and grabs the nodes to suppress factory keystrokes. It rescans every two seconds for connection changes. Bluetooth was verified on physical hardware in the July worklog. USB shares this Linux input path, but its physical verification is still outstanding.
+`EvdevSource` discovers matching event nodes by Keydial name or vendor/product IDs, excludes the configured virtual output device, and grabs the nodes to suppress factory keystrokes. It rescans every two seconds for connection changes and evicts failed readers immediately, including when discovery still lists their path. Bluetooth was verified on physical hardware in the July worklog. USB shares this Linux input path, but its physical verification is still outstanding.
 
 Normal button actions fire on release so the translator can recognize the peak chord. Sticky actions hold until release. Each wheel event produces a direction pulse. This behavior is suitable for remapping; it is not a timestamped physical-input stream for competitive game timing.
 
-Macros are awaited by the dispatch path. Commands use argument arrays and `create_subprocess_exec`, without a shell. They run with the user's privileges. Profile switches reload the live binding map. See the current audit for remaining lifecycle and sensitivity issues.
+Physical macros run as managed tasks so a delay cannot block their input reader. At most eight macros, including GUI previews, can run; duplicate physical retriggers are ignored and no backlog is kept. Commands use argument arrays and `create_subprocess_exec`, without a shell, and retain detached child lifetimes.
+
+Output keys belong to their original activations. Overlapping shortcuts share key ownership, and release uses the original keys even after a binding is removed or changed. Active-profile changes, node loss, reader failure, input overruns and shutdown invalidate the old action generation, cancel its work and release its output directly. Safety cleanup uses synchronous callbacks rather than the bounded event bus.
+
+The current K20 node set forms one conservative session. Readiness requires both the mapped-key/dial-click and wheel capabilities, successful capture/state queries, completed old-task cleanup and released controls after a reset. Buffered recovery gestures are discarded; their releases do not fire actions. A silent neutral snapshot can rearm immediately. `SYN_DROPPED` handling discards through the next report and queries held keys. Independent physical-device grouping remains deferred.
+
+An output write failure attempts best-effort release, retires the endpoint and reports unavailable or uncertain output. Resolve the cause and restart Commander; runtime output recreation is deliberately absent. Input reconnection remains automatic with healthy output. The saved sensitivity setting still needs a separate semantics/implementation milestone.
 
 ## Configuration and profiles
 
 `Config` reads global settings and supports legacy binding configuration. `ProfileStore` initializes the first profile from that configuration, then stores one YAML file per profile under `~/.config/huion-keydial-mini/profiles/`. The `active` file records the selected profile. YAML round trips preserve comments; writes use a temporary file and rename.
 
-`KeybindManager` holds the active in-memory map. GUI mutations write the profile and reload the map if that profile is active. The shared `validation.py` module defines control IDs, key names and action schemas. The Unix binding command still focuses on keystrokes; it does not expose every GUI action type equally.
+`KeybindManager` holds the active in-memory map. GUI mutations write the profile and reload the map if that profile is active. All effective active-map changes share a publication boundary; persistence errors preserve the prior live map, while identical or description-only changes preserve ongoing input. The shared `validation.py` module defines control IDs, key names and action schemas. The Unix binding command still focuses on keystrokes; it does not expose every GUI action type equally.
 
 ## Local control interfaces
 
 * `ApiServer` serves REST, `/api/events` WebSocket events and built frontend assets on `127.0.0.1:8137` by default.
+* Status separates physical connection from readiness and output availability. Test-fire returns structured non-success results for busy, cancelled or unavailable work; deliberate previews remain available after complete device removal and finished cleanup when output is healthy.
 * The API checks loopback Host headers and browser Origin headers. The local UI, matching loopback origins, development UI on port 5173, and command-line requests without an Origin remain supported. Cross-origin browser requests and WebSocket upgrades are rejected.
 * Unix socket messages are newline-framed JSON with protocol version 2, client timeouts and bounded frames. The runtime directory is mode 0700 and the control socket is mode 0600.
 * The actual service port is advertised through the runtime directory for the shell.
@@ -65,4 +72,4 @@ A future live integration must introduce an authenticated, origin-scoped, revoca
 
 Python tests cover profiles, validation, actions, IPC, API and input translation with temporary configuration and mocked device access. One opt-in integration case requires writable `/dev/uinput`; its discovery is restricted to its own synthetic node. Frontend browser regressions use fixture APIs and an isolated Vite server, without the real daemon.
 
-Current findings and verification evidence are recorded in `docs/AUDIT-2026-10-29.md`. Historical design documents describe earlier decisions and should not override the current implementation.
+The October baseline is recorded in `docs/AUDIT-2026-10-29.md`. The approved recovery contract is in `docs/superpowers/specs/2026-10-30-k20-recovery-design.md`; dated qualification evidence is in `docs/development/2026-10-30-k20-qualification.md`. Historical design documents describe earlier decisions and should not override the current implementation.

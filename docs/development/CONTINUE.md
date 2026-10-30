@@ -2,6 +2,27 @@
 
 This is the handoff for continuing Commander independently from KeyCommand. The direction below is agreed; the next release design and individual feature designs still need the ongoing interview.
 
+## Recovery milestone update, 2026-10-30
+
+Earl approved `docs/superpowers/specs/2026-10-30-k20-recovery-design.md` and
+instructed implementation. The software milestone now includes original output
+ownership, bounded cancellable macros, validated active-map publication,
+node/lost-frame recovery, neutral rearm, client-abort cancellation and truthful
+local status. Normal remapping semantics and the separate game boundary remain.
+
+Final verification: **192 Python tests passed** with the hardware capture case
+excluded, **15 browser regressions passed**, frontend build/lint and whitespace
+checks passed. A principal architecture/code review found three Important gaps;
+all were reproduced and fixed in one pass, then the full checks passed.
+See [dated qualification](2026-10-30-k20-qualification.md) and the
+[implementation plan](../superpowers/plans/2026-10-30-k20-recovery.md).
+
+Current physical K20 availability, disruptive symptoms and USB data-cable facts
+remain unanswered. No device was captured and no installed service/profile or
+deployment was changed. Bluetooth and USB need separate physical qualification;
+packaging remains the next software milestone. The architecture findings below
+record the **pre-recovery baseline**, not a list of still-unfixed software bugs.
+
 ## Agreed direction
 
 Earl wants a dependable Linux K20 release first, followed by maintained device adapters. Commander remains the original local control center. KeyCommand is a separate browser game with its own repository, deployment and development session.

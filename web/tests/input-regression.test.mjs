@@ -144,7 +144,7 @@ before(async () => {
         }
         if (path.endsWith('/activate')) state.active = path.split('/')[3];
       }
-      if (path === '/api/status') body = { device: { connected: false }, service: { version: 'test' }, active_profile: state.active };
+      if (path === '/api/status') body = { device: state.device || { connected: false }, output: state.output, service: { version: 'test' }, active_profile: state.active };
       else if (path === '/api/profiles') body = ['A', 'B'].map(name => ({name, binding_count: Object.keys(state.bindings[name]).length, active: name === state.active}));
       else if (path === '/api/keys') body = { groups: { letters: ['KEY_C', 'KEY_K'] }, all: ['KEY_C', 'KEY_K'] };
       else if (path.endsWith('/bindings')) {
@@ -328,4 +328,16 @@ test('edits made while Save is pending remain an unsaved draft after it complete
   await evaluate(`window.__api.bindings.A.BUTTON_1 = {type: 'keystroke', keys: ['KEY_J']}; window.__eventSocket.onmessage({data: JSON.stringify({type: 'bindings_changed', profile: 'A'})})`)
   await until(() => evaluate('document.querySelector("button[title=BUTTON_1] .klabel").textContent === "J"'), 'subsequent remote binding refreshed')
   assert.equal(await text(), 'C')
+})
+
+
+test('recovery status distinguishes held controls and unavailable output', async () => {
+  await reset()
+  await evaluate(`window.__api.device = {connected: true, ready: false, state: 'release_controls'}; window.__eventSocket.onmessage({data: JSON.stringify({type: 'device_state', connected: true})})`)
+  await until(() => evaluate(`document.querySelector('.statusstrip').textContent.includes('Release controls to resume')`), 'release-controls status')
+  assert.equal(await evaluate(`document.querySelector('.statusstrip .dot').classList.contains('on')`), false)
+  await evaluate(`window.__api.output = {available: false, cleanup_confirmed: false}; window.__api.device.state = 'output_unavailable'; window.__eventSocket.onmessage({data: JSON.stringify({type: 'device_state', connected: true})})`)
+  await until(() => evaluate(`document.querySelector('.statusstrip').textContent.includes('Output unavailable')`), 'output-fault status')
+  await evaluate(`window.__api.output.available = true; window.__api.device = {connected: true, ready: true, state: 'ready'}; window.__eventSocket.onmessage({data: JSON.stringify({type: 'device_state', connected: true})})`)
+  await until(() => evaluate(`document.querySelector('.statusstrip .dot').classList.contains('on')`), 'ready status')
 })

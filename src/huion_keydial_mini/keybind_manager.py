@@ -81,29 +81,57 @@ class KeybindManager:
         self.socket_path = socket_path or self._get_default_socket_path()
         self.profile_store = profile_store
         self.event_bus = event_bus
+        self.on_bindings_changing = None
+        self._active_name = profile_store.get_active() if profile_store else None
         self.keybind_map: Dict[str, KeybindAction] = {}
         self.server: Optional[asyncio.Server] = None
         if self.profile_store is not None:
-            self.keybind_map = self.profile_store.load_bindings()
+            self.keybind_map = self._stage_bindings(self.profile_store.load_bindings())
             logger.info("Loaded %d bindings from profile %r",
                         len(self.keybind_map), self.profile_store.get_active())
         else:
             self._load_initial_bindings()  # legacy in-memory mode
 
+    @staticmethod
+    def _stage_bindings(bindings):
+        from .validation import normalize_action_id, validate_action, ValidationError
+        staged = {}
+        for action_id, action in bindings.items():
+            canonical = normalize_action_id(str(action_id))
+            if canonical in staged:
+                raise ValidationError('Duplicate control: %s' % canonical)
+            validated = validate_action(action.to_dict())
+            validated['description'] = action.description
+            staged[canonical] = KeybindAction.from_dict(validated)
+        return staged
+
+    @staticmethod
+    def _effective(bindings):
+        from .validation import validate_action
+        return {aid: validate_action(action.to_dict()) for aid, action in bindings.items()}
+
+    def _replace_bindings(self, bindings, force=False):
+        staged = self._stage_bindings(bindings)
+        if force or self._effective(staged) != self._effective(self.keybind_map):
+            if self.on_bindings_changing:
+                self.on_bindings_changing()
+        self.keybind_map = staged
+
     def switch_profile(self, name: str) -> None:
-        """Switch the active profile and reload the binding map."""
+        """Persist a validated candidate before publishing a new active map."""
         if self.profile_store is None:
             raise RuntimeError("No profile store attached")
+        bindings = self._stage_bindings(self.profile_store.load_bindings(name))
         self.profile_store.set_active(name)
-        self.keybind_map = self.profile_store.load_bindings()
+        self._replace_bindings(bindings, force=name != self._active_name)
+        self._active_name = name
         if self.event_bus is not None:
             self.event_bus.publish({"type": "profile_changed", "name": name})
-        logger.info("Switched to profile %r (%d bindings)", name, len(self.keybind_map))
 
     def reload_bindings(self) -> None:
-        """Reload the live binding map from the active profile on disk."""
         if self.profile_store is not None:
-            self.keybind_map = self.profile_store.load_bindings()
+            self._replace_bindings(self.profile_store.load_bindings())
+            self._active_name = self.profile_store.get_active()
             self._publish_bindings_changed()
 
     def _publish_bindings_changed(self):
@@ -378,7 +406,7 @@ class KeybindManager:
 
     async def _cmd_set_binding(self, command: Dict[str, Any]) -> Dict[str, Any]:
         """Set a keybinding (validated, persisted when a profile store is attached)."""
-        from .validation import normalize_action_id, validate_keys, ValidationError
+        from .validation import normalize_action_id, validate_action, ValidationError
         action_id = command.get('action_id')
         action_data = command.get('action')
 
@@ -387,14 +415,16 @@ class KeybindManager:
 
         try:
             action_id = normalize_action_id(str(action_id))
-            action = KeybindAction.from_dict(action_data)
-            action.keys = validate_keys(action.keys or [])
+            normalized = validate_action(action_data)
+            normalized['description'] = action_data.get('description')
+            action = KeybindAction.from_dict(normalized)
+            staged = self._stage_bindings({**self.keybind_map, action_id: action})
         except (ValidationError, KeyError, ValueError) as e:
             return {'status': 'error', 'message': f'Invalid binding: {e}'}
 
-        self.keybind_map[action_id] = action
         if self.profile_store is not None:
             self.profile_store.save_binding(action_id, action)
+        self._replace_bindings(staged)
         self._publish_bindings_changed()
 
         logger.info(f"Set binding {action_id}: {action.description}")
@@ -411,9 +441,11 @@ class KeybindManager:
             return {'status': 'error', 'message': 'Missing action_id'}
 
         if action_id in self.keybind_map:
-            del self.keybind_map[action_id]
+            staged = self._stage_bindings({aid: action for aid, action in self.keybind_map.items()
+                                          if aid != action_id})
             if self.profile_store is not None:
                 self.profile_store.remove_binding(action_id)
+            self._replace_bindings(staged)
             self._publish_bindings_changed()
             logger.info(f"Removed binding {action_id}")
             return {
@@ -429,9 +461,9 @@ class KeybindManager:
     async def _cmd_clear_all(self) -> Dict[str, Any]:
         """Clear all keybindings."""
         count = len(self.keybind_map)
-        self.keybind_map.clear()
         if self.profile_store is not None:
             self.profile_store.clear_bindings()
+        self._replace_bindings({})
         self._publish_bindings_changed()
         logger.info(f"Cleared all {count} bindings")
         return {
@@ -452,13 +484,18 @@ class KeybindManager:
 
     def set_action(self, action_id: str, action: KeybindAction):
         """Set a keybind action."""
-        self.keybind_map[action_id] = action
+        from .validation import normalize_action_id
+        action_id = normalize_action_id(action_id)
+        self._replace_bindings({**self.keybind_map, action_id: action})
         logger.info(f"Set binding {action_id}: {action.description}")
 
     def remove_action(self, action_id: str) -> bool:
         """Remove a keybind action."""
+        from .validation import normalize_action_id
+        action_id = normalize_action_id(action_id)
         if action_id in self.keybind_map:
-            del self.keybind_map[action_id]
+            self._replace_bindings({aid: action for aid, action in self.keybind_map.items()
+                                    if aid != action_id})
             logger.info(f"Removed binding {action_id}")
             return True
         return False

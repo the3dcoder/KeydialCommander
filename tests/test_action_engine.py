@@ -67,7 +67,10 @@ def test_macro_runs_steps_and_delays_on_press_only():
     action = KeybindAction(type="macro", steps=[
         {"keys": ["KEY_A"]}, {"delay_ms": 100}, {"keys": ["KEY_B"]}])
     eng = ActionEngine(FakeMgr(action), u, sleep=fake_sleep)
-    asyncio.run(eng.execute(press()))
+    async def run_macro():
+        await eng.execute(press())
+        await eng.drain()
+    asyncio.run(run_macro())
     assert u.emitted == [["KEY_A"], ["KEY_B"]]
     assert slept == [0.1]
     asyncio.run(eng.execute(release()))          # release: no-op

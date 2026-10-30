@@ -3,6 +3,16 @@
 Working document. Updated as phases complete; see `WORKLOG.md` for the running change log and
 `AUDIT-2026-07-19.md` for defect IDs referenced below (H1…L9).
 
+## Recovery update, 2026-10-30
+
+The approved K20 recovery software milestone now implements owned-key cleanup,
+managed macro cancellation, validated profile/binding boundaries, lost-input and
+reader recovery, neutral rearm and local readiness/fault status. Final checks:
+192 Python tests passed with hardware capture excluded, 15 browser regressions
+passed, build/lint passed. See [qualification evidence](development/2026-10-30-k20-qualification.md).
+Current Bluetooth/USB qualification and packaging remain open; no installed
+service, profile, system rule or game deployment changed.
+
 ## Current direction, 2026-10-29
 
 Keydial Commander remains the Linux K20 control center. KeyCommand is a separate browser game and repository for keycommand.io, with Type Sprint and Control Circuit, optional device identification and a Cloudflare Worker/D1 shared leaderboard. Start with `examples/keycommand-profile.yaml`; a live daemon bridge requires its own authenticated, revocable capture design.

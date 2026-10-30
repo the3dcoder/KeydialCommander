@@ -29,7 +29,9 @@ export interface ProfileBindings {
 }
 
 export interface Status {
-  device: { connected: boolean }
+  device: { connected: boolean; ready?: boolean; state?: string }
+  output?: { available: boolean; cleanup_confirmed: boolean }
+  actions?: { busy_count: number }
   service: { version: string }
   active_profile: string
 }

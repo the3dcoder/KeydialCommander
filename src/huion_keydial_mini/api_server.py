@@ -103,6 +103,7 @@ class ApiServer:
         self.port = port
         self.device_connected = False
         self.bound_port = None
+        self.runtime_status = None
         self._runner = None
         self.app = self._build_app()
 
@@ -192,13 +193,14 @@ class ApiServer:
 
     async def _activate_profile(self, request):
         from .profile_store import ProfileError
+        from .validation import ValidationError
         name = request.match_info["name"]
         try:
             if self.keybind_manager:
                 self.keybind_manager.switch_profile(name)
             else:
                 self.profile_store.set_active(name)
-        except ProfileError as e:
+        except (ProfileError, ValidationError) as e:
             return json_error(str(e))
         return web.json_response({"status": "ok"})
 
@@ -283,8 +285,19 @@ class ApiServer:
             validated = validate_action(action_data)
         except ValidationError as e:
             return json_error(str(e))
-        if self.action_engine:
+        from .action_engine import ActionRejected
+        from .uinput_handler import OutputUnavailable
+        if self.action_engine is None:
+            return json_error("Output unavailable", code="unavailable", status=503)
+        try:
             await self.action_engine.fire(KeybindAction.from_dict(validated))
+        except ActionRejected as error:
+            return json_error(str(error), code=error.code,
+                              status=503 if error.code == 'unavailable' else 409)
+        except OutputUnavailable:
+            return json_error("Output unavailable", code="unavailable", status=503)
+        except (OSError, RuntimeError) as error:
+            return json_error(str(error), code="action_failed", status=502)
         return web.json_response({"status": "ok"})
 
     async def _events(self, request):
@@ -314,8 +327,10 @@ class ApiServer:
 
     # -- basic handlers -----------------------------------------------------
     async def _status(self, request):
+        runtime = self.runtime_status() if self.runtime_status else {}
         return web.json_response({
-            "device": {"connected": self.device_connected},
+            **runtime,
+            "device": {"connected": self.device_connected, **runtime.get('device', {})},
             "service": {"version": self.version},
             "active_profile": self.profile_store.get_active(),
         })
@@ -340,7 +355,7 @@ class ApiServer:
     async def start(self):
         # Short graceful window: closing WebSockets (on_shutdown) should be instant,
         # but never let cleanup block the daemon's shutdown for long.
-        self._runner = web.AppRunner(self.app, shutdown_timeout=3.0)
+        self._runner = web.AppRunner(self.app, shutdown_timeout=3.0, handler_cancellation=True)
         await self._runner.setup()
         site = web.TCPSite(self._runner, self.host, self.port)
         await site.start()

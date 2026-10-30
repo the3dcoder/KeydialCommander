@@ -25,7 +25,7 @@ def test_device_dispatches_through_action_engine_and_bus(isolated_home):
     ev = InputEvent(EventType.KEY_PRESS, "BUTTON_1")
     asyncio.run(dev._dispatch(ev))
 
-    dev.action_engine.execute.assert_awaited_once_with(ev)
+    dev.action_engine.execute.assert_awaited_once_with(ev, generation=0)
     assert {"type": "key_event", "action_id": "BUTTON_1", "pressed": True} in published
 
 
