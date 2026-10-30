@@ -2,6 +2,28 @@
 
 This is the handoff for continuing Commander independently from KeyCommand. The direction below is agreed; the next release design and individual feature designs still need the ongoing interview.
 
+## Release onboarding update, 2026-10-30
+
+Earl requested a better GitHub README, an easy-to-use release page and continued
+roadmap interviews with the same Earl identity. PR #1 is now merged into `main`
+at `92ff585`. The release-onboarding branch prepares `1.3.0a1` as a public
+prerelease with a prebuilt Linux bundle, wheel, install guide and checksums.
+See [artifact evidence](2026-10-30-release-artifacts.md),
+[versioned notes](../releases/1.3.0a1.md) and the
+[release process](../RELEASING.md).
+
+Fresh installed-wheel checks passed outside the checkout with Node absent from
+`PATH`; 192 Python tests passed with hardware capture excluded, 15 browser tests
+passed, build/lint and archive checks passed. No installed application/service,
+user profile, system rule or physical device was changed.
+
+The next interview concerns the native Ubuntu package: Ubuntu 26.04 first versus
+24.04 plus 26.04, and explicit first start versus automatic login start. The
+recommended first options remain provisional until Earl answers. Record future
+answers in the [release interview](2026-10-30-release-direction.md), then develop
+the concrete native-package design. Current hardware availability/capture
+permission still cannot be inferred from planning defaults.
+
 ## Recovery milestone update, 2026-10-30
 
 Earl approved `docs/superpowers/specs/2026-10-30-k20-recovery-design.md` and

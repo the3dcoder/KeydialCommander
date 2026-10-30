@@ -1,157 +1,160 @@
 <div align="center">
 
-# ⌨️ Keydial Commander
+# Keydial Commander
 
-### Turn your Huion Keydial Mini (K20) into a Stream-Deck-style macro pad — on Linux.
+### Your Huion Keydial Mini. Your shortcuts. On Linux.
 
-Remap every button and the dial **visually** — to shortcuts, chords, macros, app launches, or
-profile switches. No more being stuck with the fixed factory keys.
+Turn the K20's 18 buttons and dial into a visual control surface for shortcuts,
+macros, programs and profiles.
 
-![License: MIT](https://img.shields.io/badge/License-MIT-2dd4a7.svg)
-![Platform: Linux](https://img.shields.io/badge/Platform-Linux-333.svg)
-![Backend: Python](https://img.shields.io/badge/Backend-Python-3776AB.svg)
-![UI: React](https://img.shields.io/badge/UI-React-61DAFB.svg)
+[**Download the preview**](https://github.com/the3dcoder/KeydialCommander/releases/tag/v1.3.0a1)
+&nbsp; · &nbsp;
+[Installation guide](docs/INSTALL.md)
+&nbsp; · &nbsp;
+[Roadmap](docs/ROADMAP.md)
+&nbsp; · &nbsp;
+[Report a problem](https://github.com/the3dcoder/KeydialCommander/issues)
 
-![Keydial Commander](docs/screenshots/hero.png)
+[![Latest preview](https://img.shields.io/github/v/release/the3dcoder/KeydialCommander?include_prereleases&label=preview&color=2dd4a7)](https://github.com/the3dcoder/KeydialCommander/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-2dd4a7)](LICENSE)
+![Platform: Linux](https://img.shields.io/badge/platform-Linux-333)
+
+![Keydial Commander showing the K20 layout and binding editor](docs/screenshots/hero.png)
 
 </div>
 
----
+## Make every control useful
 
-## ✨ What it does
-
-- 🎛️ **Remap all 18 keys + the dial** — a picture of your device you click to configure
-- ⌨️ **Shortcuts & chords** — `Ctrl+C`, `Ctrl+Shift+E`, anything — captured by just pressing them
-- ⚡ **Macros** — multi-step key sequences with delays
-- 🚀 **Launch apps / run commands / open URLs**
-- 🗂️ **Profiles** — per-app layouts you switch in a click (or bind a key to switch)
-- 🔴 **Live feedback** — keys light up as you press them; test-fire any action
-- 🌗 **Dark & light themes**, drag-and-drop action library, and a real desktop app window
-- 🐧 **Pure Linux, no root at runtime** — works over Bluetooth *and* USB
+- **Configure visually.** Select a button or dial action, choose an action, then
+  **Save**. Click-to-edit and drag-and-drop both work.
+- **Capture shortcuts naturally.** Record combinations such as `Ctrl+Shift+E`,
+  including left/right modifiers and modifier-only holds.
+- **Create macros.** Combine key sequences and delays without blocking input.
+- **Launch programs and URLs.** Commands use explicit program arguments.
+- **Keep separate profiles.** Create, clone, import and export YAML layouts;
+  switch manually or bind a control to switch.
+- **See what is happening.** Identify controls, watch live input feedback, and
+  distinguish connection, readiness and output problems.
+- **Recover predictably.** Disconnects and profile changes cancel old work and
+  release owned keys. Recovery waits for released controls before fresh input.
+- **Choose your workspace.** Dark, light and system themes; local browser UI or
+  an optional GTK/WebKit desktop window.
 
 <table>
 <tr>
-<td width="50%"><img src="docs/screenshots/editing.png" alt="Editing a key"></td>
-<td width="50%"><img src="docs/screenshots/light.png" alt="Light theme"></td>
+<td width="50%"><img src="docs/screenshots/editing.png" alt="Editing a keyboard shortcut for a K20 button"></td>
+<td width="50%"><img src="docs/screenshots/light.png" alt="Keydial Commander in its light theme"></td>
 </tr>
 <tr>
-<td align="center"><em>Click a key → assign any shortcut, macro, or command</em></td>
-<td align="center"><em>Light or dark, follows your system</em></td>
+<td align="center">Select a control, configure an action, Save.</td>
+<td align="center">A familiar layout in light or dark.</td>
 </tr>
 </table>
 
----
+## Download and get started
 
-## 🚀 Quick start
+Open [GitHub Releases](https://github.com/the3dcoder/KeydialCommander/releases)
+and choose the **Linux preview bundle**. It includes the built web UI, Python
+wheel, device-access rule, user-service template and optional desktop files.
+**Node and a source checkout are not needed to run that download.**
+
+| Download | Choose it for |
+| --- | --- |
+| [`keydial-commander-1.3.0a1-linux.tar.gz`](https://github.com/the3dcoder/KeydialCommander/releases/download/v1.3.0a1/keydial-commander-1.3.0a1-linux.tar.gz) | The complete preview bundle and installation instructions. Start here. |
+| Python `.whl` | An existing Python installation with device access and service setup already managed. |
+| `SHA256SUMS` | Checking that downloaded files match the published artifacts. |
+| GitHub's automatic “Source code” archives | Development. These need a frontend build; use the Linux bundle to run the prebuilt UI. |
+
+Follow the [installation guide](docs/INSTALL.md), then open
+**http://127.0.0.1:8137**. Select a control, assign an action and press **Save**.
+Profiles stay under `~/.config/huion-keydial-mini/profiles/`.
+
+This is an **early preview**, not a qualified installation release. The next
+delivery milestone is a tested Ubuntu package with a simpler installation.
+
+## Device and platform status
+
+| Area | Current evidence |
+| --- | --- |
+| Linux K20 remapping | Implemented with `evdev` capture and `uinput` output. Administrator access is needed for initial device-rule setup; the application runs as your user. |
+| Bluetooth | Physical evidence from July 2026 on Ubuntu 24.04. The new recovery behavior still needs dated hardware qualification. |
+| USB | Shares the Linux input path. Physical USB/data-cable qualification remains open. |
+| Automated recovery checks | 192 Python tests passed with hardware capture excluded; 15 isolated browser regressions passed. See the [qualification record](docs/development/2026-10-30-k20-qualification.md). |
+| Distribution packages | Ubuntu packaging is next. Existing Debian, Arch, Nix and RPM builders are unqualified. |
+
+Normal buttons fire on release to recognize button chords. “Sticky” means
+**hold while the physical control is pressed**, not a toggle. The dial emits
+direction pulses. Saved dial sensitivity is not yet applied by the input path.
+Battery reporting, a tray icon and automatic per-application profile switching
+are still roadmap items.
+
+## Build from source
+
+For development, use Python and **Node 24 or newer**. Build the frontend before
+installing a non-editable Python package so the installed wheel includes the UI:
 
 ```bash
-# 1. Get it
 git clone https://github.com/the3dcoder/KeydialCommander.git
 cd KeydialCommander
-
-# 2. Install the driver + service + device access, and build the app
-#    (asks for sudo only for the system pieces; needs Node/npm for the UI)
-make install-all
-make build-web
-make install-shell        # optional: adds a desktop app window + launcher
-
-# 3. Start it (also auto-starts on login)
-systemctl --user enable --now huion-keydial-mini-user.service
+python3 -m venv .venv
+npm --prefix web ci
+npm --prefix web run build
+.venv/bin/python -m pip install .
 ```
 
-Then **pair your Keydial Mini over Bluetooth** (or plug it in via USB), and **open the app**:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development, device permissions and
+hardware-free checks. For the downloadable preview and its user service, use
+the [installation guide](docs/INSTALL.md).
 
-> 🖱️ Launch **“Keydial Commander”** from your apps menu, run `keydial-commander`, or just visit
-> **http://127.0.0.1:8137** in a browser.
+## Optional terminal controls
 
-Press a key — it lights up in the app. Click it, pick a shortcut, done. That's it. 🎉
-
----
-
-## 🧠 How it works
-
-The K20 is a standard Bluetooth/USB HID keyboard that sends fixed keystrokes. Keydial Commander:
-
-1. **Grabs** the device at the Linux input layer (`evdev`), so the factory keys are suppressed;
-2. **Maps** each physical control to an action you chose;
-3. **Re-emits** it through a virtual `uinput` device.
-
-It runs as a user-level service and serves the web UI locally. Same code path works for Bluetooth
-and wired USB. See [`docs/DEVICE-K20.md`](docs/DEVICE-K20.md) for the verified hardware protocol.
-
-> **Note:** `make install-udev` installs a udev rule granting your session access to the device
-> and `/dev/uinput` — so **no `input`-group membership or root is needed at runtime**.
-
----
-
-## 🛠️ Configure from the terminal (optional)
-
-Everything the GUI does is also available via `keydialctl`:
+The CLI covers binding and profile management; the GUI exposes the full action
+editor and YAML import/export.
 
 ```bash
-keydialctl list-bindings                              # show current bindings
-keydialctl list-keys                                  # all supported key names
-keydialctl bind BUTTON_1 KEY_LEFTCTRL+KEY_C           # a shortcut
-keydialctl bind --sticky BUTTON_13 KEY_LEFTCTRL       # hold-until-released modifier
-keydialctl bind DIAL_CW KEY_VOLUMEUP                  # dial clockwise → volume up
+keydialctl list-bindings
+keydialctl list-keys
+keydialctl bind BUTTON_1 KEY_LEFTCTRL+KEY_C
+keydialctl bind --sticky BUTTON_13 KEY_LEFTCTRL
+keydialctl bind DIAL_CW KEY_VOLUMEUP
 keydialctl unbind BUTTON_1
-keydialctl reset                                      # clear the active profile
-
-keydialctl profile list                               # active profile marked with *
+keydialctl profile list
 keydialctl profile create Krita --clone-from Default
 keydialctl profile switch Krita
 ```
 
-**Controls:** buttons are `BUTTON_1`–`BUTTON_18`; the dial is `DIAL_CW`, `DIAL_CCW`, `DIAL_CLICK`.
-Combine buttons for chords (`BUTTON_1+BUTTON_2`).
+Controls are `BUTTON_1`–`BUTTON_18`, `DIAL_CW`, `DIAL_CCW` and `DIAL_CLICK`.
+Use `BUTTON_1+BUTTON_2` for a button chord. The preview's CLI executables are in
+`~/.local/share/keydial-commander/venv/bin/`; use that prefix if they are not on
+your shell's `PATH`.
 
-**Action types:** `keystroke` (keys/chords, optional `sticky` hold), `macro` (steps + delays),
-`command` (launch an app / run a program, no shell), and `profile_switch` (a profile name or
-`"next"`).
-
----
-
-## 🔌 Local API
-
-The service exposes a local HTTP + WebSocket API on `127.0.0.1:8137` (this is what the GUI uses):
+## Service and local API
 
 ```bash
-curl http://127.0.0.1:8137/api/status
-curl -X PUT http://127.0.0.1:8137/api/profiles/Default/bindings/BUTTON_1 \
-     -H 'Content-Type: application/json' -d '{"type":"keystroke","keys":["KEY_F9"]}'
-```
-
-Endpoints cover profiles CRUD, per-binding get/put/delete, dial sensitivity, YAML export/import,
-`test-fire`, and a `/api/events` WebSocket streaming live key + device events.
-
----
-
-## 🩺 Managing the service
-
-```bash
-systemctl --user status  huion-keydial-mini-user.service
+systemctl --user status huion-keydial-mini-user.service
 systemctl --user restart huion-keydial-mini-user.service
-journalctl --user -u     huion-keydial-mini-user.service -f
+journalctl --user -u huion-keydial-mini-user.service -f
+curl http://127.0.0.1:8137/api/status
 ```
 
-Profiles live in `~/.config/huion-keydial-mini/profiles/` (one YAML each) and every change persists
-automatically.
+The UI talks to a loopback HTTP/WebSocket API. Profiles persist as YAML;
+commands run with your user privileges. Keep the API local. The
+[architecture](ARCHITECTURE.md) explains capture, output ownership, recovery
+and the control interfaces.
 
----
+## What comes next
 
-## 🤝 Contributing
+1. One tested Ubuntu installation artifact, including the UI and service.
+2. Dated Bluetooth and USB qualification plus clearer local diagnostics.
+3. Maintained device adapters, starting with a second available physical device.
 
-Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for the dev setup (Python driver +
-`web/` Vite/React frontend), architecture, and workflow. More docs in [`docs/`](docs/):
-[audit](docs/AUDIT-2026-07-19.md), [device protocol](docs/DEVICE-K20.md),
-[roadmap](docs/ROADMAP.md).
+[Full roadmap](docs/ROADMAP.md) · [Contribution guide](CONTRIBUTING.md) ·
+[Device reference](docs/DEVICE-K20.md) · [Release process](docs/RELEASING.md)
 
-## 📄 License
+[KeyCommand](https://keycommand.io) is the separate browser game. Commander
+provides an optional [importable game profile](examples/keycommand-profile.yaml);
+there is no live game-to-daemon bridge.
 
-MIT — see [LICENSE](LICENSE). © 2026 Big Bwain LLC.
+## License
 
-Built with [python-evdev](https://github.com/gvalkov/python-evdev),
-[aiohttp](https://docs.aiohttp.org/), [Click](https://click.palletsprojects.com/),
-[ruamel.yaml](https://yaml.readthedocs.io/), and
-[React](https://react.dev/) + [Vite](https://vite.dev/) + [dnd-kit](https://dndkit.com/) +
-[TanStack Query](https://tanstack.com/query).
+[MIT](LICENSE). © 2026 Big Bwain LLC. Maintained by Earl.

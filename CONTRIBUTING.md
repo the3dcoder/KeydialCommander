@@ -9,24 +9,30 @@ Huion Keydial Mini (K20). This guide covers the development setup, architecture,
 git clone https://github.com/the3dcoder/KeydialCommander.git
 cd KeydialCommander
 
-# Python driver + tests (a virtualenv is recommended)
+# Build assets before packaging. Use Node 24 or newer.
+npm --prefix web ci
+npm --prefix web run build
+
+# Python driver + tests in a virtual environment
 python3 -m venv .venv
 .venv/bin/pip install -e ".[test]"
-
-# Device access for local testing (grants your session /dev/uinput + event nodes)
-sudo make install-udev
 ```
 
-No `input`-group membership is needed — the `70-huion-keydial-mini.rules` udev rule grants the
-logged-in session access to the device and `/dev/uinput`.
+Python headers and a compiler may be needed to build `evdev`; Ubuntu prerequisites
+are listed in [the installation guide](docs/INSTALL.md). Routine tests use fake
+devices and temporary configuration. For intentional hardware testing only,
+`make install-udev` installs the device-access rule using sudo. Starting the daemon
+or event logger captures the K20; arrange that separately from routine tests.
+No blanket `input`-group membership is needed.
 
 ### Web UI (frontend)
 
 The GUI lives in `web/` (Vite + React + TypeScript) and builds into `src/huion_keydial_mini/web/dist`,
-which the daemon serves. It needs Node/npm:
+which the daemon serves. It needs Node 24 or newer and npm:
 
 ```bash
-cd web && npm install
+cd web
+npm ci
 npm run dev      # dev server on :5173, proxying /api to the running daemon on :8137
 npm run build    # production build into the package (also: `make build-web` from the repo root)
 ```
@@ -66,13 +72,20 @@ Key modules under `src/huion_keydial_mini/`: `evdev_source`, `input_map`, `input
 ## Testing
 
 ```bash
-.venv/bin/pytest tests/ -q                                  # all tests
-.venv/bin/pytest tests/ --cov=huion_keydial_mini            # with coverage
-.venv/bin/pytest tests/test_action_engine.py -v             # a single file
+.venv/bin/pytest tests/ -q -k 'not test_end_to_end_grab_and_read'
+.venv/bin/pytest tests/ --cov=huion_keydial_mini -k 'not test_end_to_end_grab_and_read'
+.venv/bin/pytest tests/test_action_engine.py -v
+npm --prefix web test
+npm --prefix web run build
+npm --prefix web run lint
 ```
 
-Tests are hardware-free (evdev/uinput are exercised via a synthetic device or mocks; the API via
-the aiohttp test client). Please add tests for new behavior.
+The excluded integration case opens a synthetic uinput device and grabs its
+node; it is not part of routine hardware-free checks. Remaining input/output
+tests use mocks/fakes and the API uses isolated loopback servers. Browser tests
+need Chromium (or `KEYDIAL_TEST_BROWSER` pointing to it) and fixture APIs, not the
+real daemon. Restricted sandboxes may need a permitted local-socket test run and
+a temporary `XDG_RUNTIME_DIR`. Add meaningful regressions for behavior changes.
 
 ## Code style
 
@@ -116,7 +129,7 @@ KeydialCommander/
 
 Open an issue at <https://github.com/the3dcoder/KeydialCommander/issues>. Include your OS, kernel,
 and Python versions, the device model/firmware if known, relevant logs
-(`journalctl --user -u keydial-commander -e` or the `--log-level DEBUG` output), and clear
+(`journalctl --user -u huion-keydial-mini-user.service -e` or the `--log-level DEBUG` output), and clear
 reproduction steps.
 
 ## License
