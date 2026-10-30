@@ -3,6 +3,7 @@
 PYTHON := python3
 PIP := pip3
 VENV_DIR := venv
+WHEEL ?=
 
 # Permission constants
 SERVICE_PERMS := 644
@@ -38,12 +39,13 @@ help:
 
 build-web:
 	@echo "Building the Keydial Commander web UI (requires Node/npm)..."
-	cd web && npm install && npm run build
+	cd web && npm ci && npm run build
 	@echo "Built to src/huion_keydial_mini/web/dist/ (served by the daemon)"
 
 install-shell:
 	@echo "Installing the Keydial Commander desktop shell (user-local, no root)..."
 	install -Dm644 packaging/shell/commander_shell.py $(HOME)/.local/share/keydial-commander/commander_shell.py
+	install -Dm644 packaging/shell/service_startup.py $(HOME)/.local/share/keydial-commander/service_startup.py
 	install -Dm644 packaging/shell/icon.svg $(HOME)/.local/share/icons/hicolor/scalable/apps/keydial-commander.svg
 	install -Dm755 packaging/shell/keydial-commander $(HOME)/.local/bin/keydial-commander
 	install -Dm644 packaging/shell/keydial-commander.desktop $(HOME)/.local/share/applications/keydial-commander.desktop
@@ -138,14 +140,8 @@ package-arch:
 	fi
 
 package-debian:
-	@echo "Building Debian package..."
-	@if command -v dpkg-buildpackage >/dev/null 2>&1; then \
-		./packaging/debian/build.sh; \
-	else \
-		echo "Error: dpkg-buildpackage not found. This command only works on Debian/Ubuntu."; \
-		echo "Install with: sudo apt-get install dpkg-dev"; \
-		exit 1; \
-	fi
+	@test -n "$(WHEEL)" || { echo 'Pass WHEEL=dist/huion_keydial_mini_driver-<version>-py3-none-any.whl (build UI and wheel first)'; exit 2; }
+	./packaging/debian/build.sh "$(WHEEL)"
 
 package-rpm:
 	@echo "Building RPM package..."
@@ -164,9 +160,8 @@ package-all:
 		echo "Arch Linux detected - building Arch package..."; \
 		./packaging/arch/build.sh; \
 	fi
-	@if command -v dpkg-buildpackage >/dev/null 2>&1; then \
-		echo "Debian/Ubuntu detected - building Debian package..."; \
-		./packaging/debian/build.sh; \
+	@if command -v dpkg-deb >/dev/null 2>&1 && test -n "$(WHEEL)"; then \
+		./packaging/debian/build.sh "$(WHEEL)"; \
 	fi
 	@if command -v rpmbuild >/dev/null 2>&1; then \
 		echo "RPM-based system detected - building RPM package..."; \

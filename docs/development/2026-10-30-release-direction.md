@@ -40,3 +40,26 @@ service start should be an explicit first-run action. Then write a concrete
 packaging design, review it and get the design decision before implementing
 the new installer. Hardware diagnostics and a second curated adapter follow the
 reliability/installation work; game development stays in the KeyCommand session.
+
+## Accepted recommendation and next interview
+
+Earl subsequently said, “Please continue with your recommended updates and
+improvements.” This selects Ubuntu 26.04 first, explicit first start and
+optional login startup for the next implementation milestone. The earlier
+provisional wording above records the interview at that point in time; it is
+superseded by this acceptance and the
+[native-package design](../superpowers/specs/2026-10-30-ubuntu-package-design.md).
+It supplies no facts or permission about physical devices.
+
+The next question asks which matters most after packaging:
+
+1. Local diagnostics and guided Bluetooth/USB checks (recommended): reduce
+   installation troubleshooting before adding more hardware abstractions.
+2. Apply saved dial sensitivity: fix a currently ineffective setting, after
+   agreeing units and direction/reset behavior.
+3. Begin a second maintained device adapter: requires identifying a physical
+   device and obtaining real descriptors/input evidence.
+
+No answer is recorded yet. Diagnostics is a provisional planning default;
+implementation, hardware availability and capture permission are not inferred
+from silence. Commander and the separate KeyCommand game retain their boundary.

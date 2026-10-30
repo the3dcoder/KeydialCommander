@@ -2,11 +2,27 @@
 
 This is the handoff for continuing Commander independently from KeyCommand. The direction below is agreed; the next release design and individual feature designs still need the ongoing interview.
 
+## Ubuntu package update, 2026-10-30
+
+Earl accepted Ubuntu 26.04 first, explicit first start and opt-in login startup.
+The `chore/ubuntu-package` branch builds `1.3.0a2` / `1.3.0~a2-1` with native
+runtime paths, desktop helpers and safe package lifecycle. Follow the
+[package evidence](2026-10-30-ubuntu-package.md) and
+[implementation plan](../superpowers/plans/2026-10-30-ubuntu-package.md).
+Clean Ubuntu APT install is unqualified: the private rootfs could not
+configure distro systemd. Extracted runtime and foreign-root dpkg transactions
+passed. Real graphical-session/systemd, device access and Bluetooth/USB checks
+remain separate; no host service or capture is authorized by packaging tests.
+
+The next optional interview asks which matters most: diagnostics/guided device
+checks (recommended), dial sensitivity, or a second device. Preserve any new
+answer and do not treat silence as hardware evidence or capture permission.
+
 ## Release onboarding update, 2026-10-30
 
 Earl requested a better GitHub README, an easy-to-use release page and continued
 roadmap interviews with the same Earl identity. PR #1 is now merged into `main`
-at `92ff585`. The release-onboarding branch prepares `1.3.0a1` as a public
+at `92ff585`. PR #2 merged at `9a0bc9d`; `1.3.0a1` is a published public
 prerelease with a prebuilt Linux bundle, wheel, install guide and checksums.
 See [artifact evidence](2026-10-30-release-artifacts.md),
 [versioned notes](../releases/1.3.0a1.md) and the
@@ -17,12 +33,8 @@ Fresh installed-wheel checks passed outside the checkout with Node absent from
 passed, build/lint and archive checks passed. No installed application/service,
 user profile, system rule or physical device was changed.
 
-The next interview concerns the native Ubuntu package: Ubuntu 26.04 first versus
-24.04 plus 26.04, and explicit first start versus automatic login start. The
-recommended first options remain provisional until Earl answers. Record future
-answers in the [release interview](2026-10-30-release-direction.md), then develop
-the concrete native-package design. Current hardware availability/capture
-permission still cannot be inferred from planning defaults.
+The native-package direction was subsequently accepted by Earl; see the update
+above. Hardware availability and capture permission still need explicit facts.
 
 ## Recovery milestone update, 2026-10-30
 

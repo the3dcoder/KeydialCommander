@@ -1,133 +1,143 @@
-# Install the Linux preview
+# Install on Ubuntu 26.04
 
-The preview bundle contains a built browser UI and Python package. It does not
-need Node or a source checkout. These instructions use Ubuntu's package manager
-for Python prerequisites; clean distribution-package qualification is the next
-milestone. Bluetooth and USB hardware qualification remain separate open checks.
+Download the **Ubuntu package** from [GitHub Releases](https://github.com/the3dcoder/KeydialCommander/releases/tag/v1.3.0a2).
+The preview contains the application, built UI, desktop window, service and
+access rules. APT supplies its runtime libraries. No Node, pip, compiler or
+source checkout is needed on the installed machine.
 
-## 1. Download and unpack
+This is a prerelease. Clean-rootfs checks and automated startup tests are
+recorded in the [package evidence](development/2026-10-30-ubuntu-package.md).
+Clean Ubuntu installation remains unqualified because the rootfs test could
+not finish Ubuntu's systemd setup. Actual desktop/login, device permissions
+and Bluetooth/USB qualification also remain open. Other distributions can use
+the earlier [manual Linux preview](INSTALL-PREVIEW.md).
 
-From [GitHub Releases](https://github.com/the3dcoder/KeydialCommander/releases),
-download **`keydial-commander-1.3.0a1-linux.tar.gz`** and unpack it:
+## Download and install
 
-```bash
-tar -xzf keydial-commander-1.3.0a1-linux.tar.gz
-cd keydial-commander-1.3.0a1
-```
-
-The bundle contains `INSTALL.md`, the `.whl`, `system/`, `desktop/`, `examples/`
-and the license. GitHub's automatic source archives are for development and do
-not contain the prebuilt web assets.
-
-If you also downloaded `SHA256SUMS` and the wheel beside the bundle, check both
-published files with `sha256sum --check SHA256SUMS` before unpacking.
-
-## 2. Install Python and the application
-
-Install the Python environment and compiler prerequisites used when a runtime
-dependency needs building:
+Download `huion-keydial-mini-driver_1.3.0~a2-1_all.deb` and `SHA256SUMS`.
+In the download directory, verify the package and install it:
 
 ```bash
+sha256sum --check --ignore-missing SHA256SUMS
 sudo apt update
-sudo apt install python3-venv python3-dev build-essential
-python3 -m venv "$HOME/.local/share/keydial-commander/venv"
-"$HOME/.local/share/keydial-commander/venv/bin/python" -m pip install ./huion_keydial_mini_driver-1.3.0a1-py3-none-any.whl
+sudo apt install './huion-keydial-mini-driver_1.3.0~a2-1_all.deb'
 ```
 
-The application and its dependencies live in that user-owned environment.
-The wheel includes the web UI; no frontend build is required. Its technical
-package name is `huion-keydial-mini-driver`, retained for compatibility.
+Use Ubuntu's public `main` and `universe` repositories. APT resolves Python,
+GTK/WebKit and device-access dependencies. The package name remains
+`huion-keydial-mini-driver` for compatibility; its application name is
+**Keydial Commander**. The package is architecture-independent Python; the
+initial clean installation checks target Ubuntu 26.04 amd64.
 
-## 3. Allow your desktop session to use the K20
+**Installation does not start remapping or enable login startup.** Pair the K20
+in Ubuntu's Bluetooth settings, or connect it with a USB data cable. Reconnect
+it after installation so the new access rules apply. If device access fails,
+reboot once to apply the uinput/session rules, then check the service logs below.
+Physical USB operation still needs qualification.
 
-This initial system setup requires administrator access:
+## Start and stop
+
+Open **Keydial Commander** from the application menu. This explicitly starts
+remapping and opens the window after the local service reports the installed
+version. You can also run:
 
 ```bash
-sudo install -Dm644 system/70-huion-keydial-mini.rules /etc/udev/rules.d/70-huion-keydial-mini.rules
-sudo udevadm control --reload-rules
-sudo udevadm trigger --subsystem-match=misc --subsystem-match=input
+/usr/bin/keydial-commander --start-service
 ```
 
-Pair the K20 through your desktop's Bluetooth settings before starting the
-service. If testing USB, connect it with a known data cable; USB qualification
-is still open. Reconnect the device if access has not taken effect. The rule grants your active
-desktop session access to the matching input nodes and `/dev/uinput`. It does
-not require adding your account to the blanket `input` group.
+Select a control, choose an action and press **Save**. Profiles remain under
+`~/.config/huion-keydial-mini/profiles/`.
 
-## 4. Start the user service
-
-The bundle's service template uses the virtual environment from step 2. Copy it
-into your user-service directory:
+**Closing the window leaves remapping active.** To stop it, use the launcher's
+**Stop remapping** action or run:
 
 ```bash
-install -Dm644 system/huion-keydial-mini-user.service "$HOME/.config/systemd/user/huion-keydial-mini-user.service"
-systemctl --user daemon-reload
-systemctl --user enable --now huion-keydial-mini-user.service
+/usr/bin/keydial-commander --stop-service
 ```
 
-Starting the service captures the K20's input nodes and applies the active
-profile. Open **http://127.0.0.1:8137**, choose a control, configure its action
-and press **Save**. The service starts again at login.
+A plain `keydial-commander` opens the existing UI without starting remapping.
+The browser UI is normally at http://127.0.0.1:8137; an explicitly configured
+port is advertised in `$XDG_RUNTIME_DIR/huion-keydial-mini/port`.
 
-To return the device to its factory behavior, stop Commander:
+## Optional login startup
+
+After a successful manual start, opt in with:
 
 ```bash
-systemctl --user stop huion-keydial-mini-user.service
+systemctl --user enable huion-keydial-mini-user.service
 ```
 
-## Optional desktop window
-
-The browser UI needs no GTK packages. For a desktop launcher/window, install:
+To turn login startup off:
 
 ```bash
-sudo apt install python3-gi gir1.2-gtk-3.0 gir1.2-webkit2-4.1
-install -Dm644 desktop/commander_shell.py "$HOME/.local/share/keydial-commander/commander_shell.py"
-install -Dm755 desktop/keydial-commander "$HOME/.local/bin/keydial-commander"
-install -Dm644 desktop/icon.svg "$HOME/.local/share/icons/hicolor/scalable/apps/keydial-commander.svg"
-install -Dm644 desktop/keydial-commander.desktop "$HOME/.local/share/applications/keydial-commander.desktop"
+systemctl --user disable huion-keydial-mini-user.service
 ```
 
-Ensure `~/.local/bin` is on your desktop session's `PATH` (a new login may be
-needed), then open **Keydial Commander** from the applications menu. The shell
-opens the browser if GTK/WebKit is unavailable. There is currently no tray icon.
-The bundle's desktop entry selects the included Keydial Commander icon.
-
-## Status and recovery
-
-```bash
-systemctl --user status huion-keydial-mini-user.service
-journalctl --user -u huion-keydial-mini-user.service -f
-```
-
-- **Release controls to resume:** let go of the K20 buttons/dial click, then use
-  a fresh press or turn. Recovery-time gestures do not run actions.
-- **Waiting for all K20 controls / cannot access input:** check pairing,
-  connection and the device-access setup above.
-- **Output unavailable:** inspect the service log, resolve the output access
-  problem, then restart the user service. Commander does not automatically
-  recreate a failed output backend.
-
-Bluetooth has historical physical evidence. The current recovery changes and
-USB path still need dated hardware qualification; an absent USB device can also
-mean a charge-only cable. Windows/macOS and other peripherals are outside the
-current release scope.
+Disabling login startup leaves an already-running service active. Use the stop
+command above when you also want remapping to stop now. Never run these user
+commands with `sudo`.
 
 ## Upgrade and remove
 
-For a later preview using the same environment, stop the service, install the
-new wheel with the environment's Python using `-m pip install --upgrade`, then
-start the service again. Follow that release's notes for service-template
-updates. User profiles remain in `~/.config/huion-keydial-mini/profiles/`.
-
-To remove this preview's backend and user service:
+Install a newer downloaded `.deb` with `sudo apt install ./filename.deb`.
+The package stops active package-managed instances before replacing files;
+launch Commander again afterward. It preserves your login-start choice and
+profiles. If a manager cannot be inspected or stopped, the operation fails
+before replacing/removing the application. Resolve the reported manager issue
+and retry the same APT operation. Do not delete the maintenance marker to force
+an incomplete upgrade to run.
+An active vendor unit with custom drop-ins requires you to stop it manually
+before retrying; the installer cannot safely infer which runtime it uses.
 
 ```bash
-systemctl --user disable --now huion-keydial-mini-user.service
-rm -f "$HOME/.config/systemd/user/huion-keydial-mini-user.service"
-systemctl --user daemon-reload
-rm -rf "$HOME/.local/share/keydial-commander/venv"
+sudo apt remove huion-keydial-mini-driver
+# Optional: remove package configuration bookkeeping as well.
+sudo apt purge huion-keydial-mini-driver
 ```
 
-This preserves profiles. Optional desktop files use the exact destinations above
-and can be removed individually. Remove the device rule only when it is no
-longer used by another Commander installation, then reload udev rules.
+Removal stops package-managed remapping. Your profiles, manual environments
+and user-local service overrides remain. The shared uinput kernel module is
+not unloaded.
+
+## Migrate from the manual preview
+
+The native launcher refuses to start a user-local preview unit or a legacy
+`99-huion-keydial-mini.rules` unbind setup. It does not delete those files.
+
+1. Back up your profiles and note whether login startup was enabled.
+2. Stop and disable the old user service:
+   `systemctl --user disable --now huion-keydial-mini-user.service`.
+3. Move your old `~/.config/systemd/user/huion-keydial-mini-user.service` and any
+   matching override directory to a backup outside the systemd user directory.
+   Remove or back up an old user-local Commander desktop entry if it masks the
+   new application-menu entry. Also move the old
+   `~/.local/bin/keydial-commander` launcher to a backup outside `PATH`, then run
+   `hash -r` in Bash (or open a fresh terminal). Otherwise that published preview
+   launcher can intercept the new start/stop flags. Use the absolute
+   `/usr/bin/keydial-commander` command for the native package.
+   Keep your profiles and preview venv.
+4. If a legacy `/etc/udev/rules.d/99-huion-keydial-mini.rules` unbind rule exists,
+   back it up outside the rules directory with administrator help. Also check
+   for old `/etc/systemd/user` overrides. Reboot after changing legacy rules.
+5. Run `systemctl --user daemon-reload`, then verify
+   `systemctl --user show huion-keydial-mini-user.service --property=FragmentPath`.
+   It should report `/usr/lib/systemd/user/huion-keydial-mini-user.service`
+   (or Ubuntu's `/lib` alias). Start the native launcher; opt into login startup
+   again if wanted.
+
+An older `/etc/udev/rules.d/70-huion-keydial-mini.rules` takes precedence over
+the vendor file. Compare/back up stale manual rules when migrating. Package
+installation deliberately preserves files it does not own.
+
+## Troubleshooting
+
+```bash
+systemctl --user status huion-keydial-mini-user.service
+journalctl --user -u huion-keydial-mini-user.service -n 50
+curl http://127.0.0.1:8137/api/status
+```
+
+Run the app in a logged-in graphical user session. A startup error includes
+these log commands and a link to this guide. If another preview listener or a
+stale port file reports the wrong version, stop that old service and retry.
+Keep the HTTP/WebSocket API on loopback.
