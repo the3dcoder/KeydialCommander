@@ -180,3 +180,11 @@ inline, TDD per task, one commit per task on `feat/phase1-driver-hardening`.
   driver-engineer, qa-verifier).
 - Docs created: `AUDIT-2026-07-19.md`, `ROADMAP.md`, this worklog.
 - Next: backend API approach proposal → design spec → implementation plan.
+
+## 2026-10-29: KeyCommand foundation
+
+Reviewed the current device, API, GUI, persistence, test and packaging paths before the product interview. The October audit records the actual architecture and remaining issues, including packaging, USB verification and the evdev sensitivity gap.
+
+Fixed modifier shortcut capture, profile/control-scoped action drafts, template click/drop editing and saved-draft refresh. Added loopback host/origin checks to the local HTTP and WebSocket API. Restricted the synthetic evdev test to its own virtual node. Added 14 browser regressions; Python checks pass with hardware capture excluded.
+
+KeyCommand is a separate repository and browser game for keycommand.io. Decisions: text typing plus button/dial challenges; keyboard/keypad/wheel/gamepad/touch input; optional local device identification; open self-reported peripheral boards; a Cloudflare Worker/D1 shared backend; and a Commander preset before a live paired integration. The design and build plan live under docs/superpowers. The profile is examples/keycommand-profile.yaml.

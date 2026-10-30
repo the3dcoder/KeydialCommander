@@ -45,10 +45,10 @@ export function usePutBinding(profile: string) {
   return useMutation({
     mutationFn: ({ actionId, action }: { actionId: string; action: Action }) =>
       api.putBinding(profile, actionId, action),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: keys.bindings(profile) })
-      qc.invalidateQueries({ queryKey: keys.profiles })
-    },
+    onSuccess: () => Promise.all([
+      qc.invalidateQueries({ queryKey: keys.bindings(profile) }),
+      qc.invalidateQueries({ queryKey: keys.profiles }),
+    ]),
   })
 }
 

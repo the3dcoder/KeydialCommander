@@ -6,6 +6,7 @@ Binds 127.0.0.1 only. Reuses ProfileStore/KeybindManager for all mutations
 import logging
 import weakref
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from aiohttp import web, WSCloseCode
 
@@ -66,6 +67,30 @@ async def _json(request):
         return {}
 
 
+@web.middleware
+async def local_requests_only(request, handler):
+    """Keep the local control API private to its UI and command-line clients."""
+    loopback = {"127.0.0.1", "localhost", "::1"}
+    try:
+        host = urlsplit("//" + request.host)
+        if (host.hostname not in loopback or host.username is not None
+                or host.password is not None or host.path or host.query or host.fragment):
+            return json_error("A loopback host is required", code="forbidden", status=403)
+        port = host.port or 80
+        origin_header = request.headers.get("Origin")
+        if origin_header is not None:
+            origin = urlsplit(origin_header)
+            if (origin.scheme != request.scheme or origin.hostname not in loopback
+                    or origin.username is not None or origin.password is not None
+                    or origin.path or origin.query or origin.fragment
+                    or (origin.port or 80) not in {port, 5173}):
+                return json_error("This browser origin cannot access the local API",
+                                  code="forbidden", status=403)
+    except ValueError:
+        return json_error("Invalid local request", code="forbidden", status=403)
+    return await handler(request)
+
+
 class ApiServer:
     def __init__(self, keybind_manager, profile_store, event_bus, action_engine,
                  version, host="127.0.0.1", port=8137):
@@ -86,7 +111,7 @@ class ApiServer:
 
     # -- routing ------------------------------------------------------------
     def _build_app(self):
-        app = web.Application()
+        app = web.Application(middlewares=[local_requests_only])
         app["websockets"] = weakref.WeakSet()   # open /api/events sockets
         app.on_shutdown.append(self._on_shutdown)
         r = app.router
