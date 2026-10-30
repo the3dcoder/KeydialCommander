@@ -85,19 +85,19 @@ After publication, fetch the GitHub README and release metadata, verify the
 asset names and download links, and compare published checksums. The next
 installation milestone is an Ubuntu package with clean-environment evidence.
 
-## Native Ubuntu preview (1.3.0a2 onward)
+## Native Ubuntu preview (1.3.0a3 onward)
 
 Build the locked UI and wheel first, then explicitly select that wheel:
 
 ```bash
-python3 packaging/debian/build_deb.py dist/huion_keydial_mini_driver-1.3.0a2-py3-none-any.whl --output-dir dist
-# Equivalent: make package-debian WHEEL=dist/huion_keydial_mini_driver-1.3.0a2-py3-none-any.whl
+python3 packaging/debian/build_deb.py dist/huion_keydial_mini_driver-1.3.0a3-py3-none-any.whl --output-dir dist
+# Equivalent: make package-debian WHEEL=dist/huion_keydial_mini_driver-1.3.0a3-py3-none-any.whl
 ```
 
 `dpkg-deb` stages the runtime into `/usr/lib/python3/dist-packages`, including
 version metadata. The native package includes shell/startup helpers, the vendor
 user unit, access rule, module-load request, desktop launcher and icon. Debian
-prerelease `1.3.0~a2-1` corresponds to Python `1.3.0a2`. The older debhelper
+prerelease `1.3.0~a3-1` corresponds to Python `1.3.0a3`. The older debhelper
 source-package rules are retired; this is a binary-package builder.
 
 Publish the `.deb`, wheel and `SHA256SUMS` in a new prerelease. The earlier
@@ -107,3 +107,9 @@ must cover install, upgrade fixture, remove/purge and unchanged user profiles.
 A fixture built from an earlier wheel is not a previously published native
 package. Record clean-rootfs/runtime limitations separately from real systemd,
 GUI, permissions and hardware qualification.
+
+GitHub replaces `~` in release asset filenames. The binary builder therefore
+uses `huion-keydial-mini-driver_1.3.0a3-1_all.deb` as its public filename while
+retaining `Version: 1.3.0~a3-1` inside the package. Verify downloaded filenames
+as well as bytes/checksums before publishing; never rewrite an existing tag
+to fix a failed draft.

@@ -1,6 +1,6 @@
 # Install on Ubuntu 26.04
 
-Download the **Ubuntu package** from [GitHub Releases](https://github.com/the3dcoder/KeydialCommander/releases/tag/v1.3.0a2).
+Download the **Ubuntu package** from [GitHub Releases](https://github.com/the3dcoder/KeydialCommander/releases/tag/v1.3.0a3).
 The preview contains the application, built UI, desktop window, service and
 access rules. APT supplies its runtime libraries. No Node, pip, compiler or
 source checkout is needed on the installed machine.
@@ -14,13 +14,13 @@ the earlier [manual Linux preview](INSTALL-PREVIEW.md).
 
 ## Download and install
 
-Download `huion-keydial-mini-driver_1.3.0~a2-1_all.deb` and `SHA256SUMS`.
+Download `huion-keydial-mini-driver_1.3.0a3-1_all.deb` and `SHA256SUMS`.
 In the download directory, verify the package and install it:
 
 ```bash
 sha256sum --check --ignore-missing SHA256SUMS
 sudo apt update
-sudo apt install './huion-keydial-mini-driver_1.3.0~a2-1_all.deb'
+sudo apt install './huion-keydial-mini-driver_1.3.0a3-1_all.deb'
 ```
 
 Use Ubuntu's public `main` and `universe` repositories. APT resolves Python,

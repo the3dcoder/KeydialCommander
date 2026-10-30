@@ -41,6 +41,8 @@ def wheel(tmp_path):
 
 def test_build_native_archive_with_system_python_and_desktop_payload(wheel, tmp_path):
     deb = builder().build(wheel, tmp_path / 'output')
+    # GitHub normalizes '~' to '.', so public filenames use the Python version.
+    assert deb.name == 'huion-keydial-mini-driver_1.3.0a2-1_all.deb'
     control = email.message_from_string(subprocess.check_output(['dpkg-deb', '-f', str(deb)], text=True))
     assert control['Version'] == '1.3.0~a2-1'
     assert control['Maintainer'] == 'Earl <earl@bigbwain.com>'

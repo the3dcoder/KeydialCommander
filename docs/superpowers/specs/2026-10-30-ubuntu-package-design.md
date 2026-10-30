@@ -14,7 +14,7 @@ the installed application. Preserve Earl's Git/package identity, the existing
 Python architecture and the separate KeyCommand project. Keep installation,
 upgrade and removal tests away from the host's service, profiles and devices.
 
-The next preview is Python `1.3.0a2` / Debian `1.3.0~a2-1`. Do not replace the
+The next preview is Python `1.3.0a3` / Debian `1.3.0~a3-1`. Do not replace the
 published `v1.3.0a1` artifacts.
 
 ## Approaches and selection
@@ -162,3 +162,10 @@ wheel and checksums after verification; preserve the earlier preview. Update
 README/install/release guides to make the `.deb` the Ubuntu 26.04 path while
 keeping qualification boundaries and the earlier generic bundle available.
 Integrate through a reviewed PR, with a local Earl-authored merge as before.
+
+## Draft publication correction
+
+GitHub normalized the a2 draft's tilde-containing filename. Verification stopped
+publication. Keep that source tag immutable and draft unpublished; deliver a3
+with Python-version filenames and Debian-version control metadata. This is a
+release engineering correction within the authorized milestone.

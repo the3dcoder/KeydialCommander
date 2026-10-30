@@ -7,7 +7,7 @@
 Turn the K20's 18 buttons and dial into a visual control surface for shortcuts,
 macros, programs and profiles.
 
-[**Download the Ubuntu preview**](https://github.com/the3dcoder/KeydialCommander/releases/tag/v1.3.0a2)
+[**Download the Ubuntu preview**](https://github.com/the3dcoder/KeydialCommander/releases/tag/v1.3.0a3)
 &nbsp; · &nbsp;
 [Installation guide](docs/INSTALL.md)
 &nbsp; · &nbsp;
@@ -60,7 +60,7 @@ window, device-access rule and user service. APT supplies runtime libraries.
 
 | Download | Choose it for |
 | --- | --- |
-| [`huion-keydial-mini-driver_1.3.0~a2-1_all.deb`](https://github.com/the3dcoder/KeydialCommander/releases/download/v1.3.0a2/huion-keydial-mini-driver_1.3.0~a2-1_all.deb) | Ubuntu 26.04. Start here; install with APT. |
+| [`huion-keydial-mini-driver_1.3.0a3-1_all.deb`](https://github.com/the3dcoder/KeydialCommander/releases/download/v1.3.0a3/huion-keydial-mini-driver_1.3.0a3-1_all.deb) | Ubuntu 26.04. Start here; install with APT. |
 | [Earlier manual Linux bundle](https://github.com/the3dcoder/KeydialCommander/releases/tag/v1.3.0a1) | Other Linux environments with manual Python/service setup; unqualified. |
 | Python `.whl` | An existing Python installation with device access and service setup already managed. |
 | `SHA256SUMS` | Checking that downloaded files match the published artifacts. |

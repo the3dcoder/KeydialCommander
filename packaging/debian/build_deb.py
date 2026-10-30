@@ -60,7 +60,8 @@ def build(wheel, output):
     wheel, output = Path(wheel), Path(output)
     version, deb_version = inspect_wheel(wheel)
     output.mkdir(parents=True, exist_ok=True)
-    result = output.resolve() / ('%s_%s_all.deb' % (PACKAGE, deb_version))
+    # GitHub changes '~' in asset names; keep Debian ordering in control metadata.
+    result = output.resolve() / ('%s_%s-1_all.deb' % (PACKAGE, version))
     with tempfile.TemporaryDirectory(prefix='commander-deb-') as temporary:
         stage = Path(temporary)
         stage.chmod(0o755)

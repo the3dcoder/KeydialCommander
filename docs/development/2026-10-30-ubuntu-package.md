@@ -1,6 +1,6 @@
 # Ubuntu package preview evidence — 2026-10-30
 
-Version: Python `1.3.0a2`, Debian `1.3.0~a2-1`, tag `v1.3.0a2`.
+Version: Python `1.3.0a3`, Debian `1.3.0~a3-1`, tag `v1.3.0a3`.
 The release body identifies the exact source commit. This preview delivers a
 native archive and explicit-start launcher. **Clean Ubuntu installation remains
 unqualified** because the available rootfs harness cannot finish configuring
@@ -11,14 +11,14 @@ successful APT install.
 
 | Check | Result |
 | --- | --- |
-| Python regression suite | 221 passed, one physical/synthetic uinput capture case deselected; 36 existing aiohttp/legacy mock warnings. Uses installed a2 runtime and current package helpers. |
+| Python regression suite | 221 passed, one physical/synthetic uinput capture case deselected; 36 existing aiohttp/legacy mock warnings. Uses installed a3 runtime and current package helpers. |
 | Isolated browser regressions | 15 passed with temporary Chromium and fixture API state, Node 24.18.0. |
 | Frontend build/lint | Passed. Locked frontend dependencies unchanged from the verified a1 build; rebuilt production UI before the wheel. |
 | Wheel build | Passed using temporary build tooling; built HTML/JS/CSS included. Existing table-style license metadata deprecation warning remains. |
 | Native archive | Real dpkg-deb build/extract passed. Distro Python paths, dist-info version, console help, GTK shell helper, desktop start/stop actions and system resources verified. |
 | Startup/lifecycle/builder tests | 29 passed, including failed stop/query, customized units, invalid ports, mismatched API version, foreign roots, unsafe wheel layouts and absent UI assets. |
 | Unit syntax | systemd-analyze --user verify passed; restricted sandbox emitted two ignored socket-option warnings. This does not exercise a running user manager. |
-| Foreign-root real dpkg transactions | a1 native fixture install → a2 upgrade → remove → purge passed. Self-contained maintscripts ran with DPKG_ROOT; profiles preserved and owned application files removed. Dependency checks were explicitly forced; see limits below. |
+| Foreign-root real dpkg transactions | a1 native fixture install → a3 upgrade → remove → purge passed. Self-contained maintscripts ran with DPKG_ROOT; profiles preserved and owned application files removed. Dependency checks were explicitly forced; see limits below. |
 | Ubuntu extracted runtime | Both CLI help commands, Earl identity/version, fixture status API, built index and JS/CSS assets passed under Ubuntu Base with Node/checkout absent. No driver or output was constructed. |
 | Clean Ubuntu APT installation | **Blocked/unqualified.** Dependency bootstrap failed in Ubuntu systemd's postinst before a native app installation could complete. |
 | Actual graphical session/login, permissions, Bluetooth/USB | **Unqualified.** No host service, user profile, access rule, or physical device was changed. |
@@ -84,7 +84,7 @@ The APT dependency bootstrap exited 100. We retained that failure rather than
 patching distro maintscripts or exposing host kernel/service trees.
 
 For the narrower runtime check, 267 downloaded dependency archives and the
-native a2 archive were **extracted**, without claiming they were configured by
+native a3 archive were **extracted**, without claiming they were configured by
 APT. Guest Python imported Commander from `/usr/lib/python3/dist-packages` and
 served a fixture API/UI at an ephemeral loopback port. This establishes runtime
 payload/dependency closure in that filesystem, not an installed-package result.
@@ -105,15 +105,21 @@ error dialogs, permissions and Bluetooth/USB separately. Preserve profiles and
 launched programs across those real service operations. The next optional
 feature interview recommends diagnostics/guided device checks.
 
+## Release naming correction
+
+Draft a2 verification caught GitHub normalizing `~` to `.` in an uploaded
+filename. Publication stopped because the downloaded name did not match the
+manifest. The a2 draft stays unpublished and its Git tag is preserved.
+A regression test now verifies the public filename uses the Python version
+(`1.3.0a3`), while internal Debian Version keeps prerelease ordering
+(`1.3.0~a3-1`). The corrected preview receives a new immutable `v1.3.0a3` tag.
+
 ## Release artifacts
 
-Built with source timestamp `1793335893`. The release body's source SHA and
-annotated tag identify the reviewed source; `SHA256SUMS` covers these files:
+Source timestamp `1793335893`; source commit appears in the release body.
+Draft downloads must match these names and hashes before publication:
 
 ```text
-c82fce8d33ac74bb65f878513bbcafa52d4c9ecfd993f6e08f9e56a7b46180d4  huion-keydial-mini-driver_1.3.0~a2-1_all.deb
-5cab787bff8729f78de95b90793b9d5c00165a80145cf7d254fa4ac1a23251a5  huion_keydial_mini_driver-1.3.0a2-py3-none-any.whl
+b75d44f5f8b69b9fd7a03d9c1ad5d3d53cc30a5444d1c1a3ab705689a70a3d14  huion-keydial-mini-driver_1.3.0a3-1_all.deb
+45fd5a661dbd7e2a1d60b425930eccc4637fbf4aedd6d05ca67869ab2d2878a6  huion_keydial_mini_driver-1.3.0a3-py3-none-any.whl
 ```
-
-Draft uploads are downloaded and checked before publication. The older a1
-release is preserved.

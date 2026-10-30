@@ -5,7 +5,7 @@ This is the handoff for continuing Commander independently from KeyCommand. The 
 ## Ubuntu package update, 2026-10-30
 
 Earl accepted Ubuntu 26.04 first, explicit first start and opt-in login startup.
-The `chore/ubuntu-package` branch builds `1.3.0a2` / `1.3.0~a2-1` with native
+The `chore/ubuntu-package` branch builds `1.3.0a3` / `1.3.0~a3-1` with native
 runtime paths, desktop helpers and safe package lifecycle. Follow the
 [package evidence](2026-10-30-ubuntu-package.md) and
 [implementation plan](../superpowers/plans/2026-10-30-ubuntu-package.md).

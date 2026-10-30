@@ -6,7 +6,7 @@ Working document. Updated as phases complete; see `WORKLOG.md` for the running c
 ## Ubuntu package preview, 2026-10-30
 
 Earl accepted the recommendation for Ubuntu 26.04 first, explicit first start
-and optional login startup. `1.3.0a2` adds a wheel-fed native package, an
+and optional login startup. `1.3.0a3` adds a wheel-fed native package, an
 explicit-start desktop launcher and guarded upgrade/removal. Profiles and
 user-local overrides are preserved. See the [design](superpowers/specs/2026-10-30-ubuntu-package-design.md)
 and [measured checks](development/2026-10-30-ubuntu-package.md).

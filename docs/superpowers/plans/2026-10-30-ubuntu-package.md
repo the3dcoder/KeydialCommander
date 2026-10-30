@@ -12,7 +12,7 @@
 
 ## Global constraints
 
-- Python version `1.3.0a2`; Debian version `1.3.0~a2-1`; package name `huion-keydial-mini-driver`.
+- Python version `1.3.0a3`; Debian version `1.3.0~a3-1`; package name `huion-keydial-mini-driver`.
 - Earl <earl@bigbwain.com> authors and commits all changes and tags.
 - No service enable/start/restart at install, upgrade or removal; preserve profiles and user overrides.
 - Use `/usr/lib/python3/dist-packages` with metadata and built UI; no runtime Node, pip or checkout.
@@ -59,7 +59,7 @@
 
 ### Task 4: Clean installation evidence and delivery
 
-**Files:** Update README, INSTALL, RELEASING, ROADMAP and handoff; add `docs/releases/1.3.0a2.md` and dated qualification evidence.
+**Files:** Update README, INSTALL, RELEASING, ROADMAP and handoff; add `docs/releases/1.3.0a3.md` and dated qualification evidence.
 
 **Interfaces:** Consume Task 3 native artifacts. Public release includes `.deb`, wheel and SHA256SUMS; optional generic preview remains linked separately.
 
