@@ -1,41 +1,16 @@
-Source: huion-keydial-mini-driver
+Package: huion-keydial-mini-driver
+Version: {version}
 Section: utils
 Priority: optional
-Maintainer: JD Flamm <judsonwebdesign@gmail.com>
-Build-Depends: debhelper-compat (= 13),
-               dh-python,
-               python3-all,
-               python3-setuptools,
-               python3-pip,
-               python3-build,
-               python3-installer,
-               python3-wheel
-Standards-Version: 4.6.0
-Homepage: https://github.com/Triforcey/huion-keydial-mini-uinput
-Vcs-Git: https://github.com/Triforcey/huion-keydial-mini-uinput.git
-Vcs-Browser: https://github.com/Triforcey/huion-keydial-mini-uinput
-
-Package: huion-keydial-mini-driver
 Architecture: all
-Depends: ${python3:Depends},
-         ${misc:Depends},
-         python3-bleak,
-         python3-evdev,
-         python3-pyudev,
-         python3-click,
-         python3-yaml,
-         python3-dbus-next,
-         systemd,
-         bluez
+Maintainer: Earl <earl@bigbwain.com>
+Installed-Size: {installed_size}
+Pre-Depends: python3 (>= 3.8)
+Depends: python3-evdev (>= 1.6.1), python3-click (>= 8.1.7), python3-ruamel.yaml (>= 0.17.21), python3-aiohttp (>= 3.9), python3-gi, gir1.2-gtk-3.0, gir1.2-webkit2-4.1, systemd (>= 249), udev
 Provides: huion-keydial-mini
 Conflicts: huion-keydial-mini
-Description: User space driver for Huion Keydial Mini bluetooth device
- This package provides a user space driver for the Huion Keydial Mini
- bluetooth device. It intercepts HID over BLE events and creates a
- virtual input device using uinput.
- .
- Features:
-  - Bluetooth Low Energy connectivity
-  - Customizable key mappings
-  - Dial rotation and click support
-  - Systemd service integration
+Homepage: https://github.com/the3dcoder/KeydialCommander
+Description: Keydial Commander for the Huion Keydial Mini K20
+ Linux evdev/uinput remapping with a local graphical profile editor.
+ Includes the built web UI and an explicit-start desktop launcher.
+ Installation does not enable or start remapping. Ubuntu 26.04 preview.

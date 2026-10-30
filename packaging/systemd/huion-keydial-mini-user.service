@@ -1,12 +1,16 @@
 [Unit]
 Description=Huion Keydial Mini Driver
 After=bluetooth.target
+ConditionPathExists=!/run/keydial-commander/maintenance
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/huion-keydial-mini
 Restart=on-failure
 RestartSec=2
+# Command actions launch independent user programs; stopping remapping must not
+# terminate those programs. The daemon owns its input/output tasks in-process.
+KillMode=process
 NoNewPrivileges=true
 
 [Install]

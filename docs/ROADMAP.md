@@ -3,6 +3,20 @@
 Working document. Updated as phases complete; see `WORKLOG.md` for the running change log and
 `AUDIT-2026-07-19.md` for defect IDs referenced below (H1…L9).
 
+## Ubuntu package preview, 2026-10-30
+
+Earl accepted the recommendation for Ubuntu 26.04 first, explicit first start
+and optional login startup. `1.3.0a3` adds a wheel-fed native package, an
+explicit-start desktop launcher and guarded upgrade/removal. Profiles and
+user-local overrides are preserved. See the [design](superpowers/specs/2026-10-30-ubuntu-package-design.md)
+and [measured checks](development/2026-10-30-ubuntu-package.md).
+The archive/runtime and foreign-root dpkg checks passed; clean Ubuntu APT
+installation remains blocked by the available rootfs harness and unqualified.
+
+Next interview: local diagnostics/guided Bluetooth and USB checks (recommended),
+dial sensitivity, or a second device. No current hardware availability or
+capture permission is inferred from a product preference.
+
 ## Release onboarding, 2026-10-30
 
 The first public download is a clearly marked `1.3.0a1` preview: built web UI,
@@ -12,9 +26,7 @@ separates downloads, developer builds and current qualification limits.
 wheel installation outside the checkout, isolated UI/API checks with no Node
 on `PATH`, 192 Python passes, 15 browser passes, build and lint.
 
-Next: design and qualify one native Ubuntu package. Ubuntu 26.04 first and
-explicit first start with optional login auto-start are provisional interview
-recommendations, not recorded user answers. See the
+This was followed by the authorized native Ubuntu milestone above. See the
 [installation interview](development/2026-10-30-release-direction.md).
 
 ## Recovery update, 2026-10-30
@@ -144,7 +156,8 @@ the visual contract. Split into **2A backend** (plan:
 
 ## Phase 4 — Share-ready
 
-- [ ] Fix Debian/RPM packaging (M7), refresh Arch/Nix, add Commander to packages
+- [x] Native Ubuntu binary preview with Commander UI and explicit startup
+- [ ] Qualify real desktop/login behavior; repair RPM and refresh Arch/Nix
 - [ ] CI: lint + pytest + frontend build + package smoke
 - [ ] Complete GUI/protocol documentation; README and preview install/download guides refreshed
 - [ ] Qualify stable release artifacts; first tagged preview contains prebuilt downloads

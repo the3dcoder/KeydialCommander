@@ -22,7 +22,9 @@ def daemon_url() -> str:
         if pf.exists():
             try:
                 port = int(pf.read_text().strip())
-            except ValueError:
+                if not 1 <= port <= 65535:
+                    port = 8137
+            except (OSError, ValueError):
                 pass
     return "http://127.0.0.1:%d/" % port
 
@@ -49,7 +51,46 @@ def run_window(url: str) -> bool:
     return True
 
 
+def startup_error(message):
+    print(message, file=sys.stderr)
+    try:
+        import gi
+        gi.require_version("Gtk", "3.0")
+        from gi.repository import Gtk
+        if not Gtk.init_check()[0]:
+            return
+        dialog = Gtk.MessageDialog(message_type=Gtk.MessageType.ERROR,
+                                   buttons=Gtk.ButtonsType.CLOSE,
+                                   text="Commander could not complete the service action")
+        dialog.format_secondary_text(str(message))
+        dialog.run()
+        dialog.destroy()
+    except (ImportError, ValueError):
+        pass
+
+
 def main():
+    if len(sys.argv) > 1:
+        import argparse
+        parser = argparse.ArgumentParser(description=__doc__)
+        action = parser.add_mutually_exclusive_group()
+        action.add_argument('--start-service', action='store_true', help='Start remapping, then open the window')
+        action.add_argument('--stop-service', action='store_true', help='Stop remapping and exit')
+        args = parser.parse_args()
+        if args.start_service or args.stop_service:
+            from service_startup import StartupError, start_service, stop_service
+            from importlib.metadata import version
+            try:
+                if args.stop_service:
+                    stop_service()
+                    return 0
+                url = start_service(version('huion-keydial-mini-driver'))
+            except StartupError as error:
+                startup_error(str(error))
+                return 1
+            if not run_window(url):
+                webbrowser.open(url)
+            return 0
     url = daemon_url()
     if not run_window(url):
         print("Falling back to the default browser: %s" % url)
@@ -57,4 +98,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

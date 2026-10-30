@@ -1,3 +1,18 @@
+huion-keydial-mini-driver (1.3.0~a3-1) unstable; urgency=medium
+
+  * Use GitHub-safe asset filenames while preserving Debian prerelease ordering.
+  * Supersede the unpublished a2 draft without rewriting its source tag.
+
+ -- Earl <earl@bigbwain.com>  Fri, 30 Oct 2026 12:00:00 -0400
+
+huion-keydial-mini-driver (1.3.0~a2-1) unstable; urgency=medium
+
+  * Package the evdev runtime and built Commander UI for Ubuntu 26.04.
+  * Add explicit desktop startup, opt-in login startup and safe package lifecycle.
+  * Resolve runtime dependencies through APT; preserve profiles and user overrides.
+
+ -- Earl <earl@bigbwain.com>  Fri, 30 Oct 2026 12:00:00 -0400
+
 huion-keydial-mini-driver (1.2.1-1) unstable; urgency=medium
 
   * Change 'reset' command to clear runtime bindings instead of writing to config file
